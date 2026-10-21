@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ассистент врача — Медмонитор</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Локальные стили страницы врача */
+  .chart-ph {
+    height: 120px; border-radius: 12px;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 34px, var(--line) 34px 35px),
+      linear-gradient(180deg, var(--brand-soft), #f6f8fb);
+  }
+  .score-block { text-align:center; flex:1; }
+  .score-block .num { font-size:24px; font-weight:700; }
+  .score-block .lbl { font-size:12px; color:var(--ink-soft); }
+  .banner {
+    background: var(--danger-soft); border-left: 4px solid var(--danger);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .banner .t { font-weight:700; color:var(--danger); }
+  .rowline { display:flex; justify-content:space-between; gap:12px;
+    padding:12px 0; border-bottom:1px solid var(--line); font-size:14px; }
+  .rowline:last-child { border-bottom:none; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Шапка. EDIT: ФИО врача подставляется из профиля -->
+  <header class="topbar">
+    <div>
+      <div class="title">Ассистент врача</div>
+      <div class="sub">Врач-психиатр [ФИО]</div>
+    </div>
+    <div class="row" style="gap:10px">
+      <button class="btn-link" type="button">Уведомления</button>
+      <div class="avatar">ВП</div>
+    </div>
+  </header>
+
+  <main class="screen">
+
+    <!-- ============ ВИД 1: СПИСОК ПАЦИЕНТОВ ============ -->
+    <section class="view is-active" id="view-list">
+      <div class="stack">
+
+        <div class="row wrap" style="gap:8px">
+          <span class="badge badge-soft">Пациенты</span>
+          <span class="badge badge-gray">Расписание</span>
+        </div>
+
+        <input class="search" type="search" placeholder="Поиск пациента" id="patient-search">
+
+        <p class="faint">Отсортировано по срочности · обновлено 21 окт., 13:40</p>
+
+        <!-- ГРУППА: требуют срочного внимания. EDIT: наполняется по флагам -->
+        <div class="group-head">
+          <span class="badge badge-danger">Требуют срочного внимания · 1</span>
+        </div>
+        <div class="table-wrap card" style="padding:6px 12px">
+          <table class="patients">
+            <thead>
+              <tr><th>Пациент</th><th>Сигнал</th><th>PHQ-9</th><th>GAD-7</th>
+                  <th>Дневник, 7 дн.</th><th>Активность</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>Анна К., 34</b><br><span class="faint">Депрессивный эпизод · 7-я неделя</span></td>
+                <td><span class="badge badge-danger">Суицидальный флаг</span></td>
+                <td><span class="score">12</span> <span class="delta-up">+3</span></td>
+                <td><span class="score">8</span> <span class="delta-down">−0</span></td>
+                <td>настр. 4,6 · 7/7</td>
+                <td>сегодня, 09:12</td>
+                <td><button class="btn-link open-patient" type="button">Открыть</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ГРУППА: ухудшение. EDIT: порог роста > 5 баллов задаётся на бэкенде -->
+        <div class="group-head"><span class="badge badge-warn">Ухудшение · 2</span></div>
+        <div class="table-wrap card" style="padding:6px 12px">
+          <table class="patients">
+            <tbody>
+              <tr>
+                <td><b>Игорь М., 41</b><br><span class="faint">Рекуррентное депрессивное · 3-я неделя</span></td>
+                <td>Ухудшение PHQ-9 +6</td>
+                <td><span class="score">19</span> <span class="delta-up">+6</span></td>
+                <td><span class="score">11</span> <span class="delta-up">+2</span></td>
+                <td>настр. 2,9 · 6/7</td>
+                <td>вчера</td>
+                <td><button class="btn-link open-patient" type="button">Открыть</button></td>
+              </tr>
+              <tr>
+                <td><b>Ольга С., 27</b><br><span class="faint">ГТР · 5-я неделя</span></td>
+                <td>Ухудшение GAD-7 +5</td>
+                <td><span class="score">9</span> <span class="delta-up">+1</span></td>
+                <td><span class="score">16</span> <span class="delta-up">+5</span></td>
+                <td>трев. 7,8 · 5/7</td>
+                <td>2 дня назад</td>
+                <td><button class="btn-link open-patient" type="button">Открыть</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ГРУППА: нет данных -->
+        <div class="group-head"><span class="badge badge-gray">Нет данных · 1</span></div>
+        <div class="table-wrap card" style="padding:6px 12px">
+          <table class="patients">
+            <tbody>
+              <tr>
+                <td><b>Дмитрий Л., 52</b><br><span class="faint">Депрессивный эпизод · 2-я неделя</span></td>
+                <td>Нет данных 9 дней</td>
+                <td><span class="score">15</span> <span class="delta-zero">—</span></td>
+                <td><span class="score">10</span> <span class="delta-zero">—</span></td>
+                <td>0/7</td>
+                <td>9 дней назад</td>
+                <td><button class="btn-link open-patient" type="button">Открыть</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ГРУППА: стабильно -->
+        <div class="group-head"><span class="badge badge-ok">Стабильно · 5</span></div>
+        <div class="table-wrap card" style="padding:6px 12px">
+          <table class="patients">
+            <tbody>
+              <tr>
+                <td><b>Елена В., 38</b><br><span class="faint">Смешанное тревожно-депрессивное · 10-я неделя</span></td>
+                <td>Стабильно</td>
+                <td><span class="score">6</span> <span class="delta-up">+2</span></td>
+                <td><span class="score">5</span> <span class="delta-zero">—</span></td>
+                <td>настр. 6,1 · 7/7</td>
+                <td>сегодня, 08:03</td>
+                <td><button class="btn-link open-patient" type="button">Открыть</button></td>
+              </tr>
+              <tr>
+                <td><b>Сергей П., 45</b><br><span class="faint">Депрессивный эпизод · 12-я неделя</span></td>
+                <td><span class="badge badge-ok">Ремиссия (PHQ-9 &lt; 5)</span></td>
+                <td><span class="score">3</span> <span class="delta-down">−1</span></td>
+                <td><span class="score">4</span> <span class="delta-zero">—</span></td>
+                <td>настр. 7,0 · 6/7</td>
+                <td>вчера</td>
+                <td><button class="btn-link open-patient" type="button">Открыть</button></td>
+              </tr>
+              <tr>
+                <td><b>Мария Т., 30</b><br><span class="faint">ГТР · 8-я неделя</span></td>
+                <td>Стабильно</td>
+                <td><span class="score">7</span> <span class="delta-up">+1</span></td>
+                <td><span class="score">8</span> <span class="delta-up">+2</span></td>
+                <td>трев. 4,2 · 7/7</td>
+                <td>сегодня, 11:40</td>
+                <td><button class="btn-link open-patient" type="button">Открыть</button></td>
+              </tr>
+              <tr>
+                <td><b>Алексей Н., 23</b><br><span class="faint">Депрессивный эпизод · 4-я неделя</span></td>
+                <td>Стабильно</td>
+                <td><span class="score">10</span> <span class="delta-up">+4</span></td>
+                <td><span class="score">7</span> <span class="delta-up">+3</span></td>
+                <td>настр. 5,0 · 4/7</td>
+                <td>3 дня назад</td>
+                <td><button class="btn-link open-patient" type="button">Открыть</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="demo-note">Демо-данные. Сигналы — подсказки для врача по валидированным
+        порогам, а не диагнозы.</p>
+      </div>
+    </section>
+
+    <!-- ============ ВИД 2: КАРТОЧКА ПАЦИЕНТА ============ -->
+    <section class="view tab-panel" id="view-patient">
+      <div class="stack">
+
+        <button class="btn-link" type="button" id="back-to-list" style="align-self:flex-start">‹ Все пациенты</button>
+
+        <!-- Шапка пациента -->
+        <div class="card">
+          <div class="row between wrap">
+            <div class="row">
+              <div class="avatar">АК</div>
+              <div>
+                <h2 style="font-size:19px">Анна К., 34 года</h2>
+                <div class="faint">Депрессивный эпизод средней степени · наблюдение с 2 сентября · 7-я неделя</div>
+              </div>
+            </div>
+            <div class="row" style="gap:8px">
+              <button class="btn btn-primary" type="button" style="padding:10px 18px">Написать</button>
+              <button class="btn btn-soft" type="button" style="padding:10px 18px">Позвонить</button>
+            </div>
+          </div>
+          <p class="small muted" style="margin-top:10px">Следующий визит 28 окт.</p>
+        </div>
+
+        <!-- Суицидальный флаг -->
+        <div class="banner">
+          <div class="t">Суицидальный флаг: PHQ-9 пункт 9 = 1 («в течение нескольких дней»)</div>
+          <p class="small" style="margin:6px 0 10px">
+            21 окт., 09:12 · пациентке показан экран поддержки · оценка по C-SSRS ещё не проведена
+          </p>
+          <div class="row wrap" style="gap:8px">
+            <button class="btn btn-danger" type="button" style="padding:10px 18px">Провести C-SSRS</button>
+            <button class="btn btn-outline-danger" type="button" style="padding:10px 18px">Отметить: связался(лась)</button>
+          </div>
+        </div>
+
+        <!-- Шкалы на сегодня -->
+        <div class="card">
+          <div class="row wrap" style="gap:8px">
+            <span class="badge badge-soft">PHQ-9 · 21 окт.</span>
+            <span class="badge badge-soft">GAD-7 · 21 окт.</span>
+            <span class="badge badge-gray">HAM-D17 · 30 сен.</span>
+          </div>
+          <div class="row" style="margin-top:16px">
+            <div class="score-block"><div class="num">12 / 27</div><div class="lbl">PHQ-9 · умеренная</div></div>
+            <div class="score-block"><div class="num">8 / 21</div><div class="lbl">GAD-7 · лёгкая, без изменений</div></div>
+          </div>
+          <!-- Динамика шкал. EDIT: график со ступенями порогов 5/10/15/20 -->
+          <div class="chart-ph" style="margin-top:14px"></div>
+          <p class="faint" style="margin-top:8px">
+            Пунктир — пороги PHQ-9 (5 / 10 / 15 / 20). Снижение от исходного ~33%:
+            ответ на терапию (&ge;50%) пока не достигнут.
+          </p>
+        </div>
+
+        <!-- Дневник и врачебная оценка -->
+        <div class="stack">
+          <div class="card">
+            <div class="card-title">Дневник: настроение, 30 дней</div>
+            <div class="faint" style="margin:4px 0 10px">
+              0–10 · заполнено 28 из 30 дней · лекарство 26 из 30
+            </div>
+            <div class="chart-ph"></div>
+          </div>
+          <div class="card row between">
+            <div>
+              <div class="card-title">Оценка врача — HAM-D17</div>
+              <div class="faint">2 сен. — 21 · тяжёлая → 30 сен. — 16 · умеренная</div>
+            </div>
+            <button class="btn btn-soft" type="button" style="padding:10px 16px">+ Внести оценку на визите</button>
+          </div>
+        </div>
+
+        <!-- Терапия -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:8px">Терапия</div>
+          <!-- EDIT: список препаратов — строки вида ниже -->
+          <div class="rowline"><span class="muted">[Препарат, доза]</span><span class="faint">с 2 сен.</span></div>
+          <div class="rowline"><span class="muted">[Изменение дозы]</span><span class="faint">с 30 сен.</span></div>
+          <div class="rowline"><span class="muted">Приверженность по дневнику</span><span class="bold">87% дней</span></div>
+        </div>
+
+        <!-- Подсказки ассистента -->
+        <div class="card stack" style="gap:10px">
+          <div class="card-title">Подсказки ассистента</div>
+          <div class="hint">Провести оценку суицидального риска (C-SSRS) до визита.</div>
+          <div class="hint">7-я неделя, снижение PHQ-9 &lt; 50% от исходного —
+            по клиническим рекомендациям оценить адекватность терапии.</div>
+          <div class="hint">Сон в среднем 6,4 ч, пункт 3 PHQ-9 = 2 — обсудить нарушения сна.</div>
+          <p class="faint">Решение принимает врач. Подсказки основаны на порогах шкал
+          и правилах, согласованных с клиницистом.</p>
+        </div>
+
+        <!-- PHQ-9 по пунктам. EDIT: значения (сегодня / прошлая неделя) -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:8px">PHQ-9 по пунктам · 21 окт. <span class="faint">(в скобках — 30 сен.)</span></div>
+          <div class="rowline"><span>1. Снижение интереса и удовольствия</span><span class="bold">2 (2)</span></div>
+          <div class="rowline"><span>2. Подавленность, безнадежность</span><span class="bold">2 (2)</span></div>
+          <div class="rowline"><span>3. Проблемы со сном</span><span class="bold">2 (2)</span></div>
+          <div class="rowline"><span>4. Усталость, недостаток энергии</span><span class="bold">2 (3)</span></div>
+          <div class="rowline"><span>5. Аппетит</span><span class="bold">1 (1)</span></div>
+          <div class="rowline"><span>6. Плохое мнение о себе</span><span class="bold">1 (2)</span></div>
+          <div class="rowline"><span>7. Концентрация внимания</span><span class="bold">1 (2)</span></div>
+          <div class="rowline"><span>8. Замедленность / суетливость</span><span class="bold">0 (1)</span></div>
+          <div class="rowline"><span class="bold" style="color:var(--danger)">9. Мысли о смерти, самоповреждении</span><span class="bold" style="color:var(--danger)">1 (0)</span></div>
+        </div>
+
+        <!-- Комментарии пациентки -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:8px">Комментарии пациентки</div>
+          <div class="rowline"><span class="muted">«Тяжело вставать по утрам, на работе устаю»</span><span class="faint">19 окт.</span></div>
+          <div class="rowline"><span class="muted">«Пропустила таблетку, забыла»</span><span class="faint">14 окт.</span></div>
+        </div>
+
+        <p class="demo-note">Демо-данные для прототипа</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  /* Переключение «список ↔ карточка пациента».
+     EDIT: при переходе на реальный бэкенд карточку
+     рендерить под конкретного пациента */
+  const listView = document.getElementById('view-list');
+  const patView  = document.getElementById('view-patient');
+  document.querySelectorAll('.open-patient').forEach(btn =>
+    btn.addEventListener('click', () => {
+      listView.classList.remove('is-active');
+      patView.classList.add('is-active');
+      window.scrollTo({ top: 0 });
+    }));
+  document.getElementById('back-to-list').addEventListener('click', () => {
+    patView.classList.remove('is-active');
+    listView.classList.add('is-active');
+    window.scrollTo({ top: 0 });
+  });
+</script>
+</body>
+</html>

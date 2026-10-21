@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вход — Медмонитор</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth-page plain">
+
+  <!-- Карточка входа. EDIT: логотип/название продукта -->
+  <main class="auth-card">
+    <h1>С возвращением</h1>
+    <p class="lead muted">Войдите, чтобы продолжить дневник и связь с врачом</p>
+
+    <form class="auth-form" action="#" method="post">
+      <!-- EDIT: поля формы — имена name задать под бэкенд -->
+      <div class="field">
+        <label for="email">Почта</label>
+        <input class="input" type="email" id="email" name="email"
+               placeholder="you@example.com" autocomplete="email" required>
+      </div>
+
+      <div class="field">
+        <label for="password">Пароль</label>
+        <input class="input" type="password" id="password" name="password"
+               placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+
+      <!-- Кнопки: слева текстовая «Зарегистрироваться», справа цветная пилюля «Войти» -->
+      <div class="auth-actions">
+        <a class="btn-link" href="register.html">Зарегистрироваться</a>
+        <button class="btn btn-primary btn-pill" type="submit">Войти</button>
+      </div>
+    </form>
+
+    <!-- EDIT: зона для «Забыли пароль?» и юридических ссылок -->
+    <p class="faint center" style="margin-top:20px">
+      Продолжая, вы соглашаетесь с политикой обработки данных
+    </p>
+  </main>
+
+</body>
+</html>

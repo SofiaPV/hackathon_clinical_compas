@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: clinical-compass
+Version: 0.1.0
+Summary: Clinical Compass database access layer
+Requires-Python: >=3.10

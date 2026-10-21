@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Регистрация — Медмонитор</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth-page tinted">
+
+  <!-- Карточка регистрации: та же геометрия, что и на входе -->
+  <main class="auth-card">
+    <h1>Создать аккаунт</h1>
+    <p class="lead muted">Пациентский кабинет. Данные увидит только ваш врач</p>
+
+    <form class="auth-form" action="#" method="post">
+      <div class="field">
+        <label for="email">Почта</label>
+        <input class="input" type="email" id="email" name="email"
+               placeholder="you@example.com" autocomplete="email" required>
+      </div>
+
+      <div class="field">
+        <label for="password">Пароль</label>
+        <input class="input" type="password" id="password" name="password"
+               placeholder="минимум 8 символов" autocomplete="new-password"
+               minlength="8" required>
+      </div>
+
+      <div class="field">
+        <label for="lastname">Фамилия</label>
+        <input class="input" type="text" id="lastname" name="lastname"
+               placeholder="Иванова" autocomplete="family-name" required>
+      </div>
+
+      <div class="field">
+        <label for="firstname">Имя</label>
+        <input class="input" type="text" id="firstname" name="firstname"
+               placeholder="Анна" autocomplete="given-name" required>
+      </div>
+
+      <div class="field">
+        <label for="patronymic">Отчество</label>
+        <input class="input" type="text" id="patronymic" name="patronymic"
+               placeholder="Сергеевна">
+      </div>
+
+      <div class="auth-actions">
+        <a class="btn-link" href="login.html">Уже есть аккаунт</a>
+        <button class="btn btn-primary btn-pill" type="submit">Зарегистрироваться</button>
+      </div>
+    </form>
+  </main>
+
+</body>
+</html>
