@@ -7,7 +7,10 @@ name = "clinical-compass"
 version = "0.1.0"
 description = "Clinical Compass database access layer"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "Flask>=3.1,<4.0",
+    "Flask-WTF>=1.2,<2.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
