@@ -9,7 +9,30 @@
   <main class="screen">
     <div class="stack">
       <div class="row wrap"><span class="badge badge-soft">Пациенты</span><span class="badge badge-gray">Расписание</span></div>
-      <section class="card"><div class="card-title">Мои пациенты</div><p class="muted small">Здесь будут отображаться пациенты, связанные с вашим аккаунтом.</p><div class="zone">Список пациентов пуст</div></section>
+      <section class="card">
+        <div class="section-heading">
+          <div>
+            <div class="card-title">Мои пациенты</div>
+            <p class="muted small">Пациенты, связанные с вашим аккаунтом.</p>
+          </div>
+          <a class="btn" href="{{ url_for('doctor_add_patient') }}">Добавить пациента</a>
+        </div>
+        {% if patients %}
+          <div class="patient-list">
+            {% for patient in patients %}
+              <div class="patient-row">
+                <div class="avatar avatar-small">{{ patient.name[:1] }}{{ patient.surname[:1] }}</div>
+                <div class="patient-info">
+                  <strong>{{ patient.name }} {{ patient.surname }}</strong>
+                  <span class="muted small">{{ patient.email }}</span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="zone">Список пациентов пуст</div>
+        {% endif %}
+      </section>
       <section class="card"><div class="card-title">Расписание</div><div class="zone">Предстоящих визитов пока нет</div></section>
       <section class="card"><div class="card-title">Профиль</div><p>{{ user.email }}</p><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-block" type="submit">Выйти из аккаунта</button></form></section>
     </div>

@@ -11,7 +11,31 @@
       <section class="card"><div class="card-title">Сегодня</div><p class="muted small">Здесь появится форма дневника состояния.</p><div class="zone">Пока нет записей</div></section>
       <section class="card"><div class="card-title">Динамика</div><p class="muted small">Графики настроения, тревожности и энергии будут доступны после добавления записей.</p><div class="chart-placeholder"></div></section>
       <section class="card"><div class="card-title">Лекарства</div><div class="zone">Назначения пока не добавлены</div></section>
-      <section class="card"><div class="card-title">Врач</div><div class="zone">Вы пока не связаны с врачом</div></section>
+      <section class="card">
+        <div class="card-title">Мой врач</div>
+        {% if doctors %}
+          <div class="patient-list">
+            {% for doctor in doctors %}
+              <div class="patient-row">
+                <div class="avatar avatar-small">{{ doctor.name[:1] }}{{ doctor.surname[:1] }}</div>
+                <div class="patient-info">
+                  <strong>{{ doctor.name }} {{ doctor.surname }}</strong>
+                  <span class="muted small">{{ doctor.email }}</span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="zone">
+            Вы пока не связаны с врачом. Отсканируйте QR-код,
+            который покажет врач.
+          </div>
+
+          <a class="btn btn-block" href="{{ url_for('scan_qr') }}">
+            Сканировать QR-код врача
+          </a>
+        {% endif %}
+      </section>
       <section class="card"><div class="card-title">Профиль</div><p>{{ user.email }}</p><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-block" type="submit">Выйти из аккаунта</button></form></section>
     </div>
   </main>

@@ -1,0 +1,100 @@
+
+{% extends "base.html" %}
+
+{% block title %}Сканировать QR-код — Медмонитор{% endblock %}
+
+{% block body %}
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="title">Подключение к врачу</div>
+      <div class="sub">Медмонитор</div>
+    </div>
+    <div class="avatar">М</div>
+  </header>
+
+  <main class="screen">
+    <section class="card qr-card">
+      <div class="card-title">Отсканируйте QR-код врача</div>
+
+      <p class="muted">
+        Наведите камеру на QR-код, показанный врачом на экране компьютера.
+      </p>
+
+      <div id="qr-reader"></div>
+      <p id="scan-status" class="muted" role="status">
+        Подготовка камеры…
+      </p>
+
+      <a class="text-link" href="{{ url_for('dashboard') }}">
+        ← Вернуться в кабинет
+      </a>
+    </section>
+  </main>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+  const statusElement = document.getElementById("scan-status");
+  let scanner = null;
+  let navigating = false;
+
+  async function startScanner() {
+    if (!window.Html5Qrcode) {
+      statusElement.textContent =
+        "Не удалось загрузить сканер. Проверьте подключение к интернету.";
+      return;
+    }
+
+    scanner = new Html5Qrcode("qr-reader");
+
+    try {
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 240, height: 240 } },
+        async (decodedText) => {
+          if (navigating) return;
+
+          let scannedUrl;
+
+          try {
+            scannedUrl = new URL(decodedText);
+          } catch {
+            statusElement.textContent =
+              "QR-код не содержит корректную ссылку.";
+            return;
+          }
+
+          if (
+            scannedUrl.origin !== window.location.origin ||
+            !/^\/connect\/[^/]+\/?$/.test(scannedUrl.pathname)
+          ) {
+            statusElement.textContent =
+              "Это не QR-код подключения к врачу в текущем приложении.";
+            return;
+          }
+
+          navigating = true;
+          statusElement.textContent = "Код распознан. Открываем подтверждение…";
+
+          try {
+            await scanner.stop();
+          } catch {
+            // Переход всё равно можно выполнить.
+          }
+
+          window.location.assign(scannedUrl.href);
+        },
+        () => {}
+      );
+
+      statusElement.textContent = "Наведите камеру на QR-код.";
+    } catch {
+      statusElement.textContent =
+        "Не удалось включить камеру. Проверьте разрешения браузера и HTTPS.";
+    }
+  }
+
+  startScanner();
+</script>
+{% endblock %}

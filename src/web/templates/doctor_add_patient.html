@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Добавить пациента — Медмонитор{% if has_token and expires_at %}
+{% endif %}
+{% endblock %}
+{% block body %}
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="title">Добавить пациента</div>
+      <div class="sub">{{ user.name }} {{ user.surname }}</div>
+    </div>
+    <div class="avatar">{{ user.name[:1] }}{{ user.surname[:1] }}</div>
+  </header>
+  <main class="screen">
+    <div class="stack">
+      <section class="card qr-card">
+        <a class="text-link" href="{{ url_for('dashboard') }}">← Вернуться в кабинет</a>
+        <div class="card-title">Связать аккаунты</div>
+        <p class="muted">Попросите пациента отсканировать этот QR-код телефоном. Код действует пять минут и может быть использован только один раз.</p>
+        {% if has_token %}
+          <div class="qr-frame">
+            <img src="{{ url_for('doctor_link_qr') }}" alt="QR-код для связи с пациентом">
+          </div>
+          <p class="qr-expiry">
+            Код действует ещё <strong id="qr-countdown">5:00</strong>
+          </p>
+          <form method="post" action="{{ url_for('create_patient_link') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-block" type="submit">Создать новый QR-код</button>
+          </form>
+        {% else %}
+          <div class="zone">QR-код ещё не создан или срок его действия истёк.</div>
+          <form method="post" action="{{ url_for('create_patient_link') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-block" type="submit">Показать QR-код</button>
+          </form>
+        {% endif %}
+      </section>
+    </div>
+  </main>
+</div>
+{% if has_token and expires_at %}
+<script>
+  const expiryTime = new Date(
+    {{ expires_at|tojson }}
+  ).getTime();
+
+  const countdown = document.getElementById("qr-countdown");
+  const qrFrame = document.querySelector(".qr-frame");
+
+  function updateCountdown() {
+    const secondsLeft = Math.max(
+      0,
+      Math.ceil((expiryTime - Date.now()) / 1000)
+    );
+
+    const minutes = Math.floor(secondsLeft / 60);
+    const seconds = String(secondsLeft % 60).padStart(2, "0");
+
+    if (secondsLeft === 0) {
+      countdown.textContent = "срок истёк";
+      qrFrame.hidden = true;
+      return;
+    }
+
+    countdown.textContent = `${minutes}:${seconds}`;
+    window.setTimeout(updateCountdown, 1000);
+  }
+
+  updateCountdown();
+</script>
+{% endif %}
+{% endblock %}

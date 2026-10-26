@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Подтверждение связи — Медмонитор{% endblock %}
+{% block body %}
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="title">Подключение к врачу</div>
+      <div class="sub">Медмонитор</div>
+    </div>
+    <div class="avatar">М</div>
+  </header>
+  <main class="screen">
+    <section class="card qr-card">
+      <div class="card-title">Подтвердите связь</div>
+      <p>Вы собираетесь связать свой аккаунт с врачом:</p>
+      <div class="doctor-confirmation">
+        <div class="avatar">{{ doctor.name[:1] }}{{ doctor.surname[:1] }}</div>
+        <div class="patient-info">
+          <strong>{{ doctor.name }} {{ doctor.surname }}</strong>
+          <span class="muted small">{{ doctor.email }}</span>
+        </div>
+      </div>
+      <p class="muted small">После подтверждения врач сможет видеть данные, которые доступны ему в системе.</p>
+      <form method="post" action="{{ url_for('connect_patient', token=token) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-block" type="submit">Подтвердить связь</button>
+      </form>
+      <a class="text-link centered" href="{{ url_for('dashboard') }}">Отмена</a>
+    </section>
+  </main>
+</div>
+{% endblock %}

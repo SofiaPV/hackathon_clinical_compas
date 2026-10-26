@@ -380,6 +380,20 @@ class SQLiteRepository(ClinicalCompassRepository):
             )
         return Doctor(id=user_id, info=info)
 
+    def get_user_role(self, user_id: int) -> str | None:
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT CASE
+                    WHEN EXISTS (SELECT 1 FROM Doctors WHERE id = ?) THEN 'doctor'
+                    WHEN EXISTS (SELECT 1 FROM Patients WHERE id = ?) THEN 'patient'
+                    ELSE NULL
+                END AS role
+                """,
+                (user_id, user_id),
+            ).fetchone()
+        return row["role"] if row is not None else None
+
     def link_doctor_patient(self, doctor_id: int, patient_id: int) -> None:
         with self._connect() as connection:
             connection.execute(
