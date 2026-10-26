@@ -543,7 +543,7 @@ def create_app() -> Flask:
                     """,
                     (session["user_id"],),
                 ).fetchall()
-                _, counts = all_patient_cards(connection)
+                _, counts = all_patient_cards(connection, session["user_id"])
             return render_template(
                 "doctor.html",
                 user=session_user(),
@@ -569,6 +569,9 @@ def create_app() -> Flask:
                 critical_alerts = patient_critical_alerts(
                     connection, session["user_id"]
                 )
+                test_statistics = patient_test_statistics(
+                    connection, session["user_id"]
+                )
             entries = emotion_series(session["user_id"], days=14)
             return render_template(
                 "patient.html",
@@ -577,6 +580,7 @@ def create_app() -> Flask:
                 entries=entries,
                 pending_tests=pending_tests,
                 critical_alerts=critical_alerts,
+                test_statistics=test_statistics,
             )
         session.clear()
         flash(
@@ -669,6 +673,7 @@ def create_app() -> Flask:
             f"{PUBLIC_BASE_URL}"
             f"{url_for('connect_patient', token=token)}"
         )
+        app.logger.warning("[TEMP QR LINK] %s", connect_url)  # TODO: удалить перед production.
         qr_code = qrcode.QRCode(box_size=8, border=3)
         qr_code.add_data(connect_url)
         qr_code.make(fit=True)
@@ -860,10 +865,15 @@ def create_app() -> Flask:
         if range_key not in ranges:
             range_key = "week"
         entries = emotion_series(session["user_id"], days=ranges[range_key])
+        with connect_database() as connection:
+            test_statistics = patient_test_statistics(
+                connection, session["user_id"], days=ranges[range_key]
+            )
         return render_template(
             "stats.html",
             user=session_user(),
             entries=entries,
+            test_statistics=test_statistics,
             range_key=range_key,
         )
 
@@ -1029,6 +1039,42 @@ def create_app() -> Flask:
         flash("Тест пройден. Спасибо!", "success")
         return redirect(url_for("dashboard"))
 
+    @app.get("/tests/results/<int:result_id>")
+    def patient_result_detail(result_id: int):
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        if session.get("role") != "patient":
+            flash("Результаты доступны только пациенту.", "error")
+            return redirect(url_for("dashboard"))
+        range_key = request.args.get("range", "week")
+        if range_key not in {"week", "2weeks", "month", "all"}:
+            range_key = "week"
+        back_url = url_for("stats", range=range_key)
+        with connect_database() as connection:
+            result = connection.execute(
+                """
+                SELECT r.id, r.created_at, r.total_score, r.patient_id,
+                       t.id AS test_id, t.title, t.answer_kind
+                FROM Test_Results r JOIN Tests t ON t.id = r.test_id
+                WHERE r.id = ? AND r.patient_id = ? AND t.audience = 'patient'
+                """,
+                (result_id, session["user_id"]),
+            ).fetchone()
+            if result is None:
+                flash("Результат не найден.", "error")
+                return redirect(back_url)
+            rows = _result_answers(connection, result_id, result["test_id"])
+        return render_template(
+            "result_detail.html",
+            user=session_user(),
+            result=result,
+            date=_fmt_datetime(result["created_at"]),
+            items=rows,
+            patient_id=result["patient_id"],
+            back_url=back_url,
+            back_label="К моей статистике",
+        )
+
     @app.post("/logout")
     def logout():
         session.clear()
@@ -1066,6 +1112,92 @@ def create_app() -> Flask:
 
     def _aware(moment: datetime) -> datetime:
         return moment if moment.tzinfo else moment.astimezone()
+
+    def patient_test_statistics(connection, patient_id: int, days: int | None = None):
+        """Patient-completed test histories in the selected trailing window.
+
+        Catalogue tests without results are retained. Results are ordered by
+        their actual timestamps, including legacy dates without an offset.
+        """
+        catalogue = connection.execute(
+            """
+            SELECT t.id, t.code, t.title,
+                   COALESCE(SUM(q.min_value), 0) AS min_score,
+                   COALESCE(SUM(q.max_value), 0) AS max_score
+            FROM Tests t
+            LEFT JOIN Test_Questions q ON q.test_id = t.id
+            WHERE t.audience = 'patient'
+            GROUP BY t.id, t.code, t.title
+            ORDER BY t.id
+            """
+        ).fetchall()
+        rows = connection.execute(
+            """
+            SELECT r.id, r.test_id, r.created_at, r.total_score
+            FROM Test_Results r JOIN Tests t ON t.id = r.test_id
+            WHERE r.patient_id = ? AND t.audience = 'patient'
+            """,
+            (patient_id,),
+        ).fetchall()
+        cutoff = (
+            datetime.now().astimezone() - timedelta(days=days)
+            if days is not None else None
+        )
+        histories = {test["id"]: [] for test in catalogue}
+        for row in rows:
+            moment = _aware(datetime.fromisoformat(row["created_at"])).astimezone()
+            if cutoff is not None and moment < cutoff:
+                continue
+            histories[row["test_id"]].append((moment, row))
+
+        statistics = []
+        for test in catalogue:
+            history = sorted(
+                histories[test["id"]], key=lambda item: (item[0], item[1]["id"])
+            )
+            attempts = [
+                {
+                    "id": row["id"],
+                    "date": _fmt_datetime(moment.isoformat()),
+                    "t": moment.isoformat(),
+                    "score": row["total_score"],
+                }
+                for moment, row in reversed(history)
+            ]
+            statistics.append(
+                {
+                    "id": test["id"],
+                    "code": test["code"],
+                    "title": test["title"],
+                    "min_score": test["min_score"],
+                    "max_score": test["max_score"],
+                    "count": len(attempts),
+                    "last": attempts[0] if attempts else None,
+                    "delta": (
+                        attempts[0]["score"] - attempts[1]["score"]
+                        if len(attempts) >= 2 else None
+                    ),
+                    "entries": [
+                        {"t": attempt["t"], "score": attempt["score"]}
+                        for attempt in reversed(attempts)
+                    ],
+                    "attempts": attempts,
+                }
+            )
+        return statistics
+
+    def _result_answers(connection, result_id: int, test_id: int):
+        return connection.execute(
+            """
+            SELECT q.position, q.text, ta.value
+            FROM Test_Questions q
+            LEFT JOIN Test_Answers ta
+                ON ta.question_id = q.id AND ta.result_id = ?
+            WHERE q.test_id = ?
+            ORDER BY q.position, q.id
+            """,
+            (result_id, test_id),
+        ).fetchall()
 
     def ensure_test_assignments(connection, patient_id: int) -> None:
         """Assign every catalogue test to the patient once. New tests added to
@@ -1168,7 +1300,7 @@ def create_app() -> Flask:
 
     def _fmt_datetime(value):
         try:
-            return datetime.fromisoformat(value).strftime("%d.%m.%Y %H:%M")
+            return datetime.fromisoformat(value).astimezone().strftime("%d.%m.%Y %H:%M")
         except (ValueError, TypeError):
             return value
 
@@ -1177,14 +1309,15 @@ def create_app() -> Flask:
             part for part in (row["name"], row["surname"], row["second_name"]) if part
         )
 
-    def _load_patient(connection, patient_id):
+    def _load_patient(connection, patient_id: int, doctor_id: int):
         return connection.execute(
             """
             SELECT u.id, u.name, u.surname, u.second_name, u.birth_date, u.email
             FROM Patients p JOIN Users u ON u.id = p.id
-            WHERE u.id = ?
+            JOIN Doctor_Has_Patient dhp ON dhp.patient_id = p.id
+            WHERE u.id = ? AND dhp.doctor_id = ?
             """,
-            (patient_id,),
+            (patient_id, doctor_id),
         ).fetchone()
 
     def _recent_results(connection, patient_id, code, limit=2):
@@ -1303,12 +1436,15 @@ def create_app() -> Flask:
             "diary_avg": diary_avg,
         }
 
-    def all_patient_cards(connection):
+    def all_patient_cards(connection, doctor_id: int):
         patients = connection.execute(
             """
             SELECT u.id, u.name, u.surname, u.second_name, u.birth_date
             FROM Patients p JOIN Users u ON u.id = p.id
-            """
+            JOIN Doctor_Has_Patient dhp ON dhp.patient_id = p.id
+            WHERE dhp.doctor_id = ?
+            """,
+            (doctor_id,),
         ).fetchall()
         cards = [doctor_patient_card(connection, p) for p in patients]
         cards.sort(key=lambda c: (CATEGORY_PRIORITY[c["category"]], c["full_name"]))
@@ -1323,7 +1459,7 @@ def create_app() -> Flask:
         if guard is not None:
             return guard
         with connect_database() as connection:
-            cards, counts = all_patient_cards(connection)
+            cards, counts = all_patient_cards(connection, session["user_id"])
         return render_template(
             "patients.html", user=session_user(), cards=cards, counts=counts
         )
@@ -1334,7 +1470,7 @@ def create_app() -> Flask:
         if guard is not None:
             return guard
         with connect_database() as connection:
-            patient = _load_patient(connection, patient_id)
+            patient = _load_patient(connection, patient_id, session["user_id"])
         if patient is None:
             flash("Пациент не найден.", "error")
             return redirect(url_for("doctor_patients"))
@@ -1352,7 +1488,7 @@ def create_app() -> Flask:
         if guard is not None:
             return guard
         with connect_database() as connection:
-            patient = _load_patient(connection, patient_id)
+            patient = _load_patient(connection, patient_id, session["user_id"])
             if patient is None:
                 flash("Пациент не найден.", "error")
                 return redirect(url_for("doctor_patients"))
@@ -1367,7 +1503,9 @@ def create_app() -> Flask:
             tests=doctor_tests,
         )
 
-    def _doctor_test_or_redirect(connection, patient_id, test_id):
+    def _doctor_test_or_redirect(connection, patient_id, test_id, doctor_id):
+        if _load_patient(connection, patient_id, doctor_id) is None:
+            return None, None
         test, questions = _load_test(connection, test_id)
         if test is None or test["audience"] != "doctor":
             return None, None
@@ -1380,7 +1518,7 @@ def create_app() -> Flask:
             return guard
         with connect_database() as connection:
             test, questions = _doctor_test_or_redirect(
-                connection, patient_id, test_id
+                connection, patient_id, test_id, session["user_id"]
             )
         if test is None:
             flash("Тест не найден.", "error")
@@ -1404,7 +1542,7 @@ def create_app() -> Flask:
             return guard
         with connect_database() as connection:
             test, questions = _doctor_test_or_redirect(
-                connection, patient_id, test_id
+                connection, patient_id, test_id, session["user_id"]
             )
             if test is None:
                 flash("Тест не найден.", "error")
@@ -1475,10 +1613,13 @@ def create_app() -> Flask:
         if range_key not in ranges:
             range_key = "all"
         with connect_database() as connection:
-            patient = _load_patient(connection, patient_id)
+            patient = _load_patient(connection, patient_id, session["user_id"])
             if patient is None:
                 flash("Пациент не найден.", "error")
                 return redirect(url_for("doctor_patients"))
+            test_statistics = patient_test_statistics(
+                connection, patient_id, days=ranges[range_key]
+            )
             doctor_tests = connection.execute(
                 "SELECT id, code, title FROM Tests WHERE audience = 'doctor' "
                 "ORDER BY id"
@@ -1515,6 +1656,7 @@ def create_app() -> Flask:
             full_name=_full_name(patient),
             summaries=summaries,
             entries=entries,
+            test_statistics=test_statistics,
             range_key=range_key,
         )
 
@@ -1523,30 +1665,24 @@ def create_app() -> Flask:
         guard = _require_doctor()
         if guard is not None:
             return guard
+        range_key = request.args.get("range", "all")
+        if range_key not in {"week", "2weeks", "month", "all"}:
+            range_key = "all"
         with connect_database() as connection:
             result = connection.execute(
                 """
                 SELECT r.id, r.created_at, r.total_score, r.patient_id,
                        t.id AS test_id, t.title, t.answer_kind
                 FROM Test_Results r JOIN Tests t ON t.id = r.test_id
-                WHERE r.id = ?
+                JOIN Doctor_Has_Patient dhp ON dhp.patient_id = r.patient_id
+                WHERE r.id = ? AND dhp.doctor_id = ?
                 """,
-                (result_id,),
+                (result_id, session["user_id"]),
             ).fetchone()
             if result is None:
                 flash("Результат не найден.", "error")
                 return redirect(url_for("doctor_patients"))
-            rows = connection.execute(
-                """
-                SELECT q.position, q.text, ta.value
-                FROM Test_Questions q
-                LEFT JOIN Test_Answers ta
-                    ON ta.question_id = q.id AND ta.result_id = ?
-                WHERE q.test_id = ?
-                ORDER BY q.position, q.id
-                """,
-                (result_id, result["test_id"]),
-            ).fetchall()
+            rows = _result_answers(connection, result_id, result["test_id"])
         return render_template(
             "result_detail.html",
             user=session_user(),
@@ -1554,6 +1690,11 @@ def create_app() -> Flask:
             date=_fmt_datetime(result["created_at"]),
             items=rows,
             patient_id=result["patient_id"],
+            back_url=url_for(
+                "doctor_patient_stats", patient_id=result["patient_id"],
+                range=range_key,
+            ),
+            back_label="К статистике пациента",
         )
 
     return app

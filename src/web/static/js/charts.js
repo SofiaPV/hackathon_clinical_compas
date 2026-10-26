@@ -1,4 +1,4 @@
-/* Self-contained SVG charts for the patient state tracker.
+/* Self-contained SVG charts for the state tracker and test results.
    No external dependencies, so it works offline on the local network. */
 (function (global) {
   "use strict";
@@ -173,5 +173,128 @@
     }
   }
 
-  global.MedCharts = { initPreviews: initPreviews, initTrackerChart: initTrackerChart };
+  function svgElement(tag, attributes, text) {
+    var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    Object.keys(attributes).forEach(function (name) {
+      el.setAttribute(name, attributes[name]);
+    });
+    if (text !== undefined) el.textContent = text;
+    return el;
+  }
+
+  function testDate(iso, withTime) {
+    // Keep the server's display timezone, just like the adjacent history.
+    var label = iso.slice(0, 10).split("-").reverse().join(".");
+    return withTime ? label + " " + iso.slice(11, 19) : label;
+  }
+
+  function buildTestChart(entries, minScore, maxScore, title, width) {
+    var W = width, H = W < 480 ? 230 : 280;
+    var padL = 32, padR = 18, padT = 28, padB = 38;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var start = Date.parse(entries[0].t);
+    var end = Date.parse(entries[entries.length - 1].t);
+    var svg = svgElement("svg", {
+      "class": "mc-svg",
+      viewBox: "0 0 " + W + " " + H,
+      role: "img",
+      "aria-label": "Динамика результатов: " + title
+    });
+    svg.appendChild(svgElement("title", {}, "Результаты «" + title +
+      "». Даты и баллы доступны в истории прохождений."));
+
+    function x(timestamp) {
+      return start === end ? padL + innerW / 2 :
+        padL + ((timestamp - start) / (end - start)) * innerW;
+    }
+    function y(score) {
+      return padT + (1 - (score - minScore) / (maxScore - minScore)) * innerH;
+    }
+
+    svg.appendChild(svgElement("text", {
+      "class": "mc-axis", x: padL, y: 14
+    }, "Баллы"));
+    var step = Math.max(1, Math.ceil((maxScore - minScore) / 5));
+    var ticks = [];
+    for (var score = minScore; score < maxScore; score += step) ticks.push(score);
+    // Always show the test's actual maximum, even if it is not a round number.
+    if (ticks.length > 1 && maxScore - ticks[ticks.length - 1] < step / 2) ticks.pop();
+    ticks.push(maxScore);
+    ticks.forEach(function (value) {
+      svg.appendChild(svgElement("line", {
+        "class": "mc-grid", x1: padL, y1: y(value), x2: W - padR, y2: y(value)
+      }));
+      svg.appendChild(svgElement("text", {
+        "class": "mc-axis", x: padL - 8, y: y(value) + 4, "text-anchor": "end"
+      }, value));
+    });
+
+    var labels = [entries[0]];
+    var middle = entries[Math.floor((entries.length - 1) / 2)];
+    var middleX = x(Date.parse(middle.t));
+    if (start !== end && middleX - padL > 100 && W - padR - middleX > 100) {
+      labels.push(middle);
+    }
+    if (start !== end) labels.push(entries[entries.length - 1]);
+    var sameDay = testDate(entries[0].t) === testDate(entries[entries.length - 1].t);
+    labels.forEach(function (entry, i) {
+      var label = sameDay && start !== end ?
+        entry.t.slice(11, 19) : testDate(entry.t);
+      svg.appendChild(svgElement("text", {
+        "class": "mc-axis", x: x(Date.parse(entry.t)), y: H - 14,
+        "text-anchor": labels.length === 1 ? "middle" :
+          (i === 0 ? "start" : (i === labels.length - 1 ? "end" : "middle"))
+      }, label));
+    });
+
+    if (entries.length > 1) {
+      svg.appendChild(svgElement("polyline", {
+        "class": "mc-series is-active",
+        stroke: "#2b5ce6",
+        points: entries.map(function (entry) {
+          return x(Date.parse(entry.t)).toFixed(1) + "," + y(entry.score).toFixed(1);
+        }).join(" ")
+      }));
+    }
+    entries.forEach(function (entry) {
+      var label = testDate(entry.t, true) + ": " + entry.score +
+        " из " + maxScore;
+      var dot = svgElement("circle", {
+        cx: x(Date.parse(entry.t)), cy: y(entry.score), r: 4,
+        fill: "#2b5ce6", tabindex: "0", "aria-label": label
+      });
+      dot.appendChild(svgElement("title", {}, label));
+      svg.appendChild(dot);
+    });
+    return svg;
+  }
+
+  function mountTestChart(mount) {
+    var entries = parseEntries(mount);
+    var minScore = Number(mount.getAttribute("data-min-score"));
+    var maxScore = Number(mount.getAttribute("data-max-score"));
+    if (!Array.isArray(entries) || !entries.length ||
+        !Number.isFinite(minScore) || !Number.isFinite(maxScore) || maxScore <= minScore) return;
+    var renderedWidth;
+    function render() {
+      var width = Math.max(200, Math.min(640, mount.clientWidth));
+      if (width === renderedWidth) return;
+      renderedWidth = width;
+      mount.replaceChildren(buildTestChart(entries, minScore, maxScore,
+        mount.getAttribute("data-title") || "Тест", width));
+    }
+    render();
+    if (global.ResizeObserver) new global.ResizeObserver(render).observe(mount);
+  }
+
+  function initTestCharts() {
+    var mounts = document.querySelectorAll(".test-score-chart[data-entries]");
+    for (var i = 0; i < mounts.length; i++) mountTestChart(mounts[i]);
+  }
+
+  global.MedCharts = {
+    initPreviews: initPreviews,
+    initTrackerChart: initTrackerChart,
+    initTestCharts: initTestCharts
+  };
 })(window);

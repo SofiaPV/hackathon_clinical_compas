@@ -54,9 +54,7 @@
       <section class="card">
         <div class="section-heading">
           <div class="card-title">Динамика</div>
-          {% if entries %}
-            <a class="text-link" style="margin:0;" href="{{ url_for('stats') }}">Подробнее →</a>
-          {% endif %}
+          <a class="text-link" style="margin:0;" href="{{ url_for('stats') }}">Подробнее →</a>
         </div>
         {% if entries %}
           <a class="chart-preview-link" href="{{ url_for('stats') }}">
@@ -71,6 +69,7 @@
           <p class="muted small">Графики настроения, тревоги и энергии появятся после первых записей.</p>
           <div class="chart-placeholder"></div>
         {% endif %}
+        {% include "test_statistics_preview.html" %}
       </section>
       <section class="card"><div class="card-title">Лекарства</div><div class="zone">Назначения пока не добавлены</div></section>
       <section class="card">
@@ -103,5 +102,8 @@
   </main>
 </div>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
-<script>MedCharts.initPreviews();</script>
+<script>
+  MedCharts.initPreviews();
+  MedCharts.initTestCharts();
+</script>
 {% endblock %}

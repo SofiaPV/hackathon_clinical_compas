@@ -1,0 +1,64 @@
+<section class="card test-statistics" aria-labelledby="test-statistics-title">
+  <div class="section-heading">
+    <h2 class="card-title" id="test-statistics-title">Психологические тесты</h2>
+    <span class="muted small">Прохождений за период: {{ test_statistics|sum(attribute='count') }}</span>
+  </div>
+
+  {% if test_statistics %}
+    <div class="test-statistics-list">
+      {% for test_stat in test_statistics %}
+      <article class="test-stat-card" aria-labelledby="test-stat-title-{{ test_stat.id }}">
+        <div class="section-heading">
+          <h3 class="test-stat-title" id="test-stat-title-{{ test_stat.id }}">{{ test_stat.title }}</h3>
+          <span class="badge badge-gray">Прохождений: {{ test_stat.count }}</span>
+        </div>
+
+        {% if test_stat.last is not none %}
+          <div class="test-stat-summary">
+            <div>
+              <div class="muted small">Последний результат в периоде</div>
+              <div class="test-stat-score">{{ test_stat.last.score }} <span>/ {{ test_stat.max_score }} баллов</span></div>
+              <time class="muted small" datetime="{{ test_stat.last.t }}">{{ test_stat.last.date }}</time>
+            </div>
+            <div class="test-stat-change">
+              {% if test_stat.delta is not none %}
+                <div class="test-stat-delta">{% if test_stat.delta > 0 %}+{% endif %}{{ test_stat.delta }} <span>баллов</span></div>
+                <div class="muted small">К предыдущему прохождению в периоде</div>
+              {% else %}
+                <div class="muted small">Для сравнения нужны два прохождения в выбранном периоде.</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="test-score-chart chart-full"
+               data-entries='{{ test_stat.entries|tojson }}'
+               data-min-score="{{ test_stat.min_score }}"
+               data-max-score="{{ test_stat.max_score }}"
+               data-title="{{ test_stat.title }}"
+               aria-label="Динамика баллов: {{ test_stat.title }}"></div>
+          <p class="muted small test-stat-scale">Шкала: {{ test_stat.min_score }}–{{ test_stat.max_score }} баллов. Каждая точка — отдельное прохождение.</p>
+
+          <details class="test-stat-history">
+            <summary>История прохождений ({{ test_stat.count }})</summary>
+            <ol class="test-stat-attempts">
+              {% for attempt in test_stat.attempts %}
+              <li>
+                <a class="test-stat-attempt"
+                   href="{{ url_for('doctor_result_detail' if user.role == 'doctor' else 'patient_result_detail', result_id=attempt.id, range=range_key) }}">
+                  <time datetime="{{ attempt.t }}">{{ attempt.date }}</time>
+                  <span class="test-stat-attempt-score">{{ attempt.score }} / {{ test_stat.max_score }} <span aria-hidden="true">→</span></span>
+                </a>
+              </li>
+              {% endfor %}
+            </ol>
+          </details>
+        {% else %}
+          <div class="zone">За выбранный период этот тест не проходили.</div>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="zone">Психологические тесты пока не добавлены.</div>
+  {% endif %}
+</section>

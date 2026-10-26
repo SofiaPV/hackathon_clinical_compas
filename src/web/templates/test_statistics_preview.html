@@ -1,0 +1,32 @@
+<div class="test-statistics-preview" aria-labelledby="test-preview-heading">
+  <h3 class="test-preview-heading" id="test-preview-heading">Результаты тестов · за всё время</h3>
+  {% if test_statistics %}
+    <div class="test-preview-list">
+      {% for test_stat in test_statistics %}
+      <article class="test-preview-card" aria-labelledby="test-preview-title-{{ test_stat.id }}">
+        <div class="section-heading">
+          <h4 class="test-stat-title" id="test-preview-title-{{ test_stat.id }}">{{ test_stat.title }}</h4>
+          <span class="muted small">Прохождений: {{ test_stat.count }}</span>
+        </div>
+        {% if test_stat.last is not none %}
+          <div class="test-preview-result">
+            <p><span class="muted small">Последний результат: </span><strong>{{ test_stat.last.score }} / {{ test_stat.max_score }}</strong></p>
+            <time class="muted small" datetime="{{ test_stat.last.t }}">{{ test_stat.last.date }}</time>
+          </div>
+          <div class="test-score-chart chart-full"
+               data-entries='{{ test_stat.entries|tojson }}'
+               data-min-score="{{ test_stat.min_score }}"
+               data-max-score="{{ test_stat.max_score }}"
+               data-title="{{ test_stat.title }}"
+               aria-label="Динамика баллов: {{ test_stat.title }}"></div>
+        {% else %}
+          <p class="muted small test-preview-empty">Этот тест ещё не пройден. После прохождения здесь появится результат.</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="muted small test-preview-empty">Статистика появится после первого прохождения теста.</p>
+  {% endif %}
+  <a class="test-preview-link" href="{{ url_for('stats', range='all', _anchor='test-statistics-title') }}">Подробная статистика тестов →</a>
+</div>

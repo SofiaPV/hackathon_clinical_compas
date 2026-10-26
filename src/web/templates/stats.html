@@ -45,7 +45,8 @@
         <span class="note-link-arrow" aria-hidden="true">→</span>
       </a>
 
-      {# Требование 4: ниже ежедневного трекера будут другие блоки графиков. #}
+      {% include "test_statistics.html" %}
+
       <section class="card chart-block">
         <div class="card-title">Приём лекарств</div>
         <div class="zone">График приёма назначенных препаратов появится здесь.</div>
@@ -56,5 +57,6 @@
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 <script>
   MedCharts.initTrackerChart();
+  MedCharts.initTestCharts();
 </script>
 {% endblock %}

@@ -438,3 +438,42 @@ a:hover { text-decoration: underline; }
 @media (max-width: 560px) {
   .tiles { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Статистика психологических тестов */
+.test-statistics > .section-heading { margin-bottom: 16px; }
+.test-statistics > .section-heading .card-title { margin-bottom: 0; }
+.test-statistics-list { display: flex; flex-direction: column; gap: 16px; }
+.test-stat-card { min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 14px; }
+.test-stat-title { font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+.test-stat-summary { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-top: 16px; }
+.test-stat-score { margin: 4px 0; font-size: 28px; font-weight: 700; line-height: 1.2; }
+.test-stat-score span, .test-stat-delta span { font-size: 13px; font-weight: 400; color: var(--ink-soft); }
+.test-stat-change { max-width: 220px; }
+.test-stat-delta { margin-bottom: 4px; font-size: 22px; font-weight: 700; line-height: 1.2; }
+.test-stat-scale { margin-top: 6px; }
+.test-stat-history { margin-top: 16px; border-top: 1px solid var(--line); }
+.test-stat-history > summary { padding: 12px 0; cursor: pointer; font-size: 14px; font-weight: 600; }
+.test-stat-history > summary:focus-visible, .test-stat-attempt:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 4px; }
+.test-stat-attempts { list-style: none; }
+.test-stat-attempt { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink); }
+.test-stat-attempt:hover { color: var(--brand); }
+.test-stat-attempt-score { flex-shrink: 0; font-weight: 600; }
+.test-stat-attempt-score > span { margin-left: 8px; color: var(--brand); }
+@media (max-width: 480px) {
+  .test-stat-summary { flex-direction: column; gap: 12px; }
+  .test-stat-change { max-width: none; }
+  .test-stat-card { padding: 12px; }
+  .test-stat-attempt { flex-wrap: wrap; }
+}
+
+/* Результаты тестов внутри блока «Динамика» в кабинете пациента */
+.test-statistics-preview { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
+.test-preview-heading { margin-bottom: 14px; font-size: 14px; font-weight: 700; }
+.test-preview-list { display: grid; gap: 12px; }
+.test-preview-card { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; }
+.test-preview-result { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; margin-top: 10px; }
+.test-preview-result strong { white-space: nowrap; }
+.test-preview-empty { margin-top: 10px; }
+.test-preview-link { display: inline-block; margin-top: 14px; font-size: 14px; font-weight: 600; }
+.test-preview-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 4px; }
+#test-statistics-title { scroll-margin-top: 100px; }

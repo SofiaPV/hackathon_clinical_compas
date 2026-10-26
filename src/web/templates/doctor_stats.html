@@ -61,9 +61,13 @@
           <div class="zone">За выбранный период нет записей о состоянии.</div>
         {% endif %}
       </section>
+      {% include "test_statistics.html" %}
     </div>
   </main>
 </div>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
-<script>MedCharts.initTrackerChart();</script>
+<script>
+  MedCharts.initTrackerChart();
+  MedCharts.initTestCharts();
+</script>
 {% endblock %}
