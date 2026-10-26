@@ -222,8 +222,12 @@ def create_app() -> Flask:
                     """,
                     (session["user_id"],),
                 ).fetchall()
+            entries = emotion_series(session["user_id"], days=14)
             return render_template(
-                "patient.html", user=session_user(), doctors=doctors
+                "patient.html",
+                user=session_user(),
+                doctors=doctors,
+                entries=entries,
             )
         session.clear()
         flash(
@@ -438,6 +442,108 @@ def create_app() -> Flask:
             token=token,
         )
 
+    @app.get("/tracker")
+    def tracker():
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        if session.get("role") != "patient":
+            flash("Дневник состояния доступен только пациенту.", "error")
+            return redirect(url_for("dashboard"))
+        return render_template("tracker.html", user=session_user())
+
+    @app.post("/tracker")
+    def tracker_save():
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        if session.get("role") != "patient":
+            flash("Дневник состояния доступен только пациенту.", "error")
+            return redirect(url_for("dashboard"))
+
+        def parse_scale(name: str) -> int | None:
+            raw = request.form.get(name)
+            if raw is None or raw == "":
+                return None
+            try:
+                value = int(raw)
+            except ValueError:
+                return None
+            return value if 0 <= value <= 10 else None
+
+        mood = parse_scale("mood")
+        anxiety = parse_scale("anxiety")
+        energy = parse_scale("energy")
+        description = (request.form.get("description") or "").strip() or None
+
+        if mood is None or anxiety is None or energy is None:
+            flash(
+                "Отметьте настроение, тревогу и энергию (значение от 0 до 10).",
+                "error",
+            )
+            return render_template(
+                "tracker.html",
+                user=session_user(),
+                mood=mood,
+                anxiety=anxiety,
+                energy=energy,
+                description=description or "",
+            )
+
+        repository.create_emotion(
+            user_id=session["user_id"],
+            anxiety=anxiety,
+            mood=mood,
+            energy=energy,
+            description=description,
+        )
+        flash("Запись о состоянии сохранена.", "success")
+        return redirect(url_for("dashboard"))
+
+    @app.get("/stats")
+    def stats():
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        if session.get("role") != "patient":
+            flash("Статистика доступна только пациенту.", "error")
+            return redirect(url_for("dashboard"))
+
+        ranges = {"week": 7, "2weeks": 14, "month": 30, "all": None}
+        range_key = request.args.get("range", "week")
+        if range_key not in ranges:
+            range_key = "week"
+        entries = emotion_series(session["user_id"], days=ranges[range_key])
+        return render_template(
+            "stats.html",
+            user=session_user(),
+            entries=entries,
+            range_key=range_key,
+        )
+
+    @app.get("/notes")
+    def notes():
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        if session.get("role") != "patient":
+            flash("Заметки о состоянии доступны только пациенту.", "error")
+            return redirect(url_for("dashboard"))
+
+        # list_emotions already returns the newest entries first.
+        records = repository.list_emotions(session["user_id"])
+        notes_list = [
+            {
+                "date": entry.created_at.strftime("%d.%m.%Y"),
+                "time": entry.created_at.strftime("%H:%M"),
+                "mood": entry.mood,
+                "anxiety": entry.anxiety,
+                "energy": entry.energy,
+                "text": entry.description,
+            }
+            for entry in records
+            if entry.description and entry.description.strip()
+        ]
+        return render_template(
+            "notes.html", user=session_user(), notes=notes_list
+        )
+
     @app.post("/logout")
     def logout():
         session.clear()
@@ -451,6 +557,27 @@ def create_app() -> Flask:
             "email": session.get("email", ""),
             "role": session.get("role", "patient"),
         }
+
+    def emotion_series(user_id: int, days: int | None = None):
+        """Emotion entries for charts, oldest first, optionally limited to a
+        trailing window of ``days``."""
+        entries = list(reversed(repository.list_emotions(user_id)))
+        if days is not None:
+            cutoff = datetime.now().astimezone() - timedelta(days=days)
+
+            def as_aware(moment: datetime) -> datetime:
+                return moment if moment.tzinfo else moment.astimezone()
+
+            entries = [e for e in entries if as_aware(e.created_at) >= cutoff]
+        return [
+            {
+                "t": entry.created_at.isoformat(),
+                "mood": entry.mood,
+                "anxiety": entry.anxiety,
+                "energy": entry.energy,
+            }
+            for entry in entries
+        ]
 
     return app
 

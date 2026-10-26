@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Заметки о состоянии — Медмонитор{% endblock %}
+{% block body %}
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="title">Заметки о состоянии</div>
+      <div class="sub">{{ user.name }} {{ user.surname }}</div>
+    </div>
+    <div class="avatar">{{ user.name[:1] }}{{ user.surname[:1] }}</div>
+  </header>
+  <main class="screen">
+    <div class="stack">
+      <a class="text-link" href="{{ url_for('stats') }}">← Вернуться к динамике</a>
+
+      {% if notes %}
+        {% for note in notes %}
+        <section class="card note-card">
+          <div class="note-meta">
+            <span class="note-when">{{ note.date }}, {{ note.time }}</span>
+            <span class="note-metrics">
+              <span class="metric-badge metric-mood">Настроение&nbsp;<strong>{{ note.mood }}</strong></span>
+              <span class="metric-badge metric-anxiety">Тревога&nbsp;<strong>{{ note.anxiety }}</strong></span>
+              <span class="metric-badge metric-energy">Энергия&nbsp;<strong>{{ note.energy }}</strong></span>
+            </span>
+          </div>
+          <p class="note-text">{{ note.text }}</p>
+        </section>
+        {% endfor %}
+      {% else %}
+        <section class="card">
+          <div class="zone">
+            Пока нет заметок с текстом. Добавьте заметку при записи состояния.
+          </div>
+        </section>
+      {% endif %}
+    </div>
+  </main>
+</div>
+{% endblock %}

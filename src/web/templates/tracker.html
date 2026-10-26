@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Как вы себя чувствуете — Медмонитор{% endblock %}
+{% block body %}
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="title">Дневник состояния</div>
+      <div class="sub">{{ user.name }} {{ user.surname }}</div>
+    </div>
+    <div class="avatar">{{ user.name[:1] }}{{ user.surname[:1] }}</div>
+  </header>
+  <main class="screen">
+    <div class="stack">
+      <section class="card">
+        <a class="text-link" href="{{ url_for('dashboard') }}">← Вернуться в кабинет</a>
+        <div class="card-title">Как вы себя чувствуете сейчас?</div>
+        <p class="muted small">Отметьте каждый показатель по шкале от 0 до 10. При желании добавьте заметку.</p>
+
+        <form method="post" action="{{ url_for('tracker_save') }}" class="tracker-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          {% set sliders = [
+            ('mood', 'Настроение', 'Очень плохое', 'Отличное', mood if mood is not none else 5),
+            ('anxiety', 'Тревога', 'Нет тревоги', 'Очень сильная тревога', anxiety if anxiety is not none else 5),
+            ('energy', 'Энергия', 'Полностью выжат', 'Очень много энергии', energy if energy is not none else 5)
+          ] %}
+
+          {% for key, title, left, right, value in sliders %}
+          <div class="slider-field" data-metric="{{ key }}">
+            <div class="slider-head">
+              <span class="slider-title">{{ title }}</span>
+              <span class="slider-value" id="val-{{ key }}">{{ value }}</span>
+            </div>
+            <input class="slider" type="range" min="0" max="10" step="1"
+                   name="{{ key }}" value="{{ value }}"
+                   oninput="document.getElementById('val-{{ key }}').textContent = this.value">
+            <div class="slider-ends">
+              <span>{{ left }}</span>
+              <span>{{ right }}</span>
+            </div>
+          </div>
+          {% endfor %}
+
+          <div class="field">
+            <label for="description">Заметки о состоянии (необязательно)</label>
+            <textarea class="input" id="description" name="description" rows="3"
+                      placeholder="Что повлияло на ваше состояние?">{{ description if description is defined else '' }}</textarea>
+          </div>
+
+          <button class="btn btn-primary btn-block" type="submit">Сохранить</button>
+        </form>
+      </section>
+    </div>
+  </main>
+</div>
+{% endblock %}

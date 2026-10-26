@@ -8,8 +8,47 @@
   </header>
   <main class="screen">
     <div class="stack">
-      <section class="card"><div class="card-title">Сегодня</div><p class="muted small">Здесь появится форма дневника состояния.</p><div class="zone">Пока нет записей</div></section>
-      <section class="card"><div class="card-title">Динамика</div><p class="muted small">Графики настроения, тревожности и энергии будут доступны после добавления записей.</p><div class="chart-placeholder"></div></section>
+      <section class="card">
+        <div class="section-heading">
+          <div class="card-title">Сегодня</div>
+          <a class="add-btn" href="{{ url_for('tracker') }}"
+             title="Добавить запись о состоянии"
+             aria-label="Добавить запись о состоянии">+</a>
+        </div>
+        <p class="muted small">Отмечайте настроение, тревогу и энергию, чтобы видеть динамику.</p>
+        {% if entries %}
+          {% set last = entries[-1] %}
+          <div class="today-summary">
+            <span class="metric-badge metric-mood">Настроение&nbsp;<strong>{{ last.mood }}</strong></span>
+            <span class="metric-badge metric-anxiety">Тревога&nbsp;<strong>{{ last.anxiety }}</strong></span>
+            <span class="metric-badge metric-energy">Энергия&nbsp;<strong>{{ last.energy }}</strong></span>
+          </div>
+          <p class="faint">Последняя запись. Нажмите «+», чтобы добавить новую.</p>
+        {% else %}
+          <div class="zone">Пока нет записей — нажмите «+», чтобы добавить первую.</div>
+        {% endif %}
+      </section>
+      <section class="card">
+        <div class="section-heading">
+          <div class="card-title">Динамика</div>
+          {% if entries %}
+            <a class="text-link" style="margin:0;" href="{{ url_for('stats') }}">Подробнее →</a>
+          {% endif %}
+        </div>
+        {% if entries %}
+          <a class="chart-preview-link" href="{{ url_for('stats') }}">
+            <div class="chart-preview" data-entries='{{ entries|tojson }}'></div>
+            <div class="legend legend-mini">
+              <span class="legend-chip" data-series="mood">Настроение</span>
+              <span class="legend-chip" data-series="anxiety">Тревога</span>
+              <span class="legend-chip" data-series="energy">Энергия</span>
+            </div>
+          </a>
+        {% else %}
+          <p class="muted small">Графики настроения, тревоги и энергии появятся после первых записей.</p>
+          <div class="chart-placeholder"></div>
+        {% endif %}
+      </section>
       <section class="card"><div class="card-title">Лекарства</div><div class="zone">Назначения пока не добавлены</div></section>
       <section class="card">
         <div class="card-title">Мой врач</div>
@@ -40,4 +79,6 @@
     </div>
   </main>
 </div>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>MedCharts.initPreviews();</script>
 {% endblock %}

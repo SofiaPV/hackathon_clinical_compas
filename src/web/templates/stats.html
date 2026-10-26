@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Динамика состояния — Медмонитор{% endblock %}
+{% block body %}
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="title">Динамика состояния</div>
+      <div class="sub">{{ user.name }} {{ user.surname }}</div>
+    </div>
+    <div class="avatar">{{ user.name[:1] }}{{ user.surname[:1] }}</div>
+  </header>
+  <main class="screen">
+    <div class="stack">
+      <a class="text-link" href="{{ url_for('dashboard') }}">← Вернуться в кабинет</a>
+
+      <div class="range-tabs">
+        {% set ranges = [
+          ('week', 'Неделя'),
+          ('2weeks', '2 недели'),
+          ('month', 'Месяц'),
+          ('all', 'Всё время')
+        ] %}
+        {% for key, label in ranges %}
+          <a class="range-tab {% if key == range_key %}is-active{% endif %}"
+             href="{{ url_for('stats', range=key) }}">{{ label }}</a>
+        {% endfor %}
+      </div>
+
+      <section class="card chart-block">
+        <div class="card-title">Ежедневный трекер</div>
+        {% if entries %}
+          <div id="tracker-chart" class="chart-full" data-entries='{{ entries|tojson }}'></div>
+          <div class="legend" id="tracker-legend">
+            <button type="button" class="legend-chip is-active" data-series="mood">Настроение</button>
+            <button type="button" class="legend-chip" data-series="anxiety">Тревога</button>
+            <button type="button" class="legend-chip" data-series="energy">Энергия</button>
+          </div>
+        {% else %}
+          <div class="zone">За выбранный период нет записей о состоянии.</div>
+        {% endif %}
+      </section>
+
+      <a class="card note-link-block" href="{{ url_for('notes') }}">
+        <span>Заметки о состоянии</span>
+        <span class="note-link-arrow" aria-hidden="true">→</span>
+      </a>
+
+      {# Требование 4: ниже ежедневного трекера будут другие блоки графиков. #}
+      <section class="card chart-block">
+        <div class="card-title">Приём лекарств</div>
+        <div class="zone">График приёма назначенных препаратов появится здесь.</div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+  MedCharts.initTrackerChart();
+</script>
+{% endblock %}
