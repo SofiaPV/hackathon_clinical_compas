@@ -1,5 +1,6 @@
 import hashlib
 import io
+import json
 import os
 import secrets
 import sqlite3
@@ -94,6 +95,45 @@ TEST_DEFINITIONS = [
             ),
         ],
     },
+    {
+        "code": "GAD-7",
+        "title": "GAD-7",
+        "schedule_days": 14,
+        "threshold": None,
+        "answer_kind": "scale",
+        "description": (
+            "Оцените, пожалуйста, насколько часто следующие проблемы беспокоили "
+            "вас в течение прошедших двух недель. Для ответов используйте "
+            "следующую шкалу: 0 = «совсем нет»; 1 = «в течение нескольких дней»; "
+            "2 = «более чем половину этого времени»; 3 = «почти каждый день». "
+            "Для каждого пункта выберите один ответ от 0 до 3."
+        ),
+        "critical_message": None,
+        # Ключевые суммы баллов для дальнейшего анализа (сохраняются в БД).
+        "severity_bands": [
+            {"min": 5, "max": 9, "label": "Лёгкая"},
+            {"min": 10, "max": 14, "label": "Умеренная"},
+            {"min": 15, "max": 21, "label": "Тяжёлая"},
+        ],
+        "questions": [
+            ("Чувство тревоги или раздражения.", 0, 3, False),
+            ("Неспособность справиться со своим беспокойством.", 0, 3, False),
+            ("Чрезмерное беспокойство по разным поводам.", 0, 3, False),
+            ("Неспособность расслабляться.", 0, 3, False),
+            (
+                "Ощущение такого беспокойства, что трудно найти себе место.",
+                0, 3, False,
+            ),
+            (
+                "Склонность быстро испытывать злость или раздражительность.",
+                0, 3, False,
+            ),
+            (
+                "Чувство страха, как будто может случиться что-то ужасное.",
+                0, 3, False,
+            ),
+        ],
+    },
 ]
 
 
@@ -160,7 +200,8 @@ def create_app() -> Flask:
                     schedule_days INTEGER NOT NULL,
                     threshold INTEGER,
                     answer_kind TEXT NOT NULL DEFAULT 'scale',
-                    critical_message TEXT
+                    critical_message TEXT,
+                    severity_bands TEXT
                 );
                 CREATE TABLE IF NOT EXISTS Test_Questions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -205,18 +246,23 @@ def create_app() -> Flask:
                     ON Test_Results(patient_id, test_id, created_at);
                 """
             )
+            # Migration for databases created before severity_bands existed.
+            columns = {row[1] for row in connection.execute("PRAGMA table_info(Tests)")}
+            if "severity_bands" not in columns:
+                connection.execute("ALTER TABLE Tests ADD COLUMN severity_bands TEXT")
             for spec in TEST_DEFINITIONS:
                 existing = connection.execute(
                     "SELECT id FROM Tests WHERE code = ?", (spec["code"],)
                 ).fetchone()
                 if existing is not None:
                     continue
+                bands = spec.get("severity_bands")
                 cursor = connection.execute(
                     """
                     INSERT INTO Tests
                         (code, title, description, schedule_days, threshold,
-                         answer_kind, critical_message)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                         answer_kind, critical_message, severity_bands)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         spec["code"],
@@ -226,6 +272,7 @@ def create_app() -> Flask:
                         spec.get("threshold"),
                         spec.get("answer_kind", "scale"),
                         spec.get("critical_message"),
+                        json.dumps(bands, ensure_ascii=False) if bands else None,
                     ),
                 )
                 test_id = cursor.lastrowid
