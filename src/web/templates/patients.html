@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Пациенты — Медмонитор{% endblock %}
+
+{% macro delta(cell) %}
+  {% if cell.value is none %}
+    <span class="muted">—</span>
+  {% else %}
+    <span class="score">{{ cell.value }}</span>
+    {% if cell.dir == 'up' %}<span class="trend trend-up">↑{{ cell.mag }}</span>
+    {% elif cell.dir == 'down' %}<span class="trend trend-down">↓{{ cell.mag }}</span>
+    {% elif cell.dir == 'flat' %}<span class="trend trend-flat">0</span>
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+
+{% block body %}
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="title">Пациенты</div>
+      <div class="sub">{{ user.name }} {{ user.surname }}</div>
+    </div>
+    <div class="avatar">{{ user.name[:1] }}{{ user.surname[:1] }}</div>
+  </header>
+  <main class="screen">
+    <div class="stack">
+      <a class="text-link" href="{{ url_for('dashboard') }}">← Вернуться в кабинет</a>
+
+      <div class="tiles">
+        <button type="button" class="tile tile-red" data-filter="red">
+          <span class="tile-title">Требует срочного внимания</span>
+          <span class="tile-number">{{ counts.red }}</span>
+          <span class="tile-note">Суицидальный флаг</span>
+        </button>
+        <button type="button" class="tile tile-yellow" data-filter="yellow">
+          <span class="tile-title">Ухудшение</span>
+          <span class="tile-number">{{ counts.yellow }}</span>
+          <span class="tile-note">Рост PHQ-9/GAD-7 ≥ 5 баллов</span>
+        </button>
+        <button type="button" class="tile tile-white" data-filter="white">
+          <span class="tile-title">Нет данных</span>
+          <span class="tile-number">{{ counts.white }}</span>
+          <span class="tile-note">Не заполняли более 7 дней</span>
+        </button>
+        <button type="button" class="tile tile-green" data-filter="green">
+          <span class="tile-title">Стабильно</span>
+          <span class="tile-number">{{ counts.green }}</span>
+          <span class="tile-note">Без сигналов</span>
+        </button>
+      </div>
+
+      <section class="card">
+        <div class="section-heading">
+          <div class="card-title">Список пациентов</div>
+          <button type="button" class="btn-link" id="reset-filter" hidden>Показать всех</button>
+        </div>
+        {% if cards %}
+        <div class="table-scroll">
+          <table class="patients-table">
+            <thead>
+              <tr>
+                <th>Пациент</th>
+                <th>Сигнал</th>
+                <th>PHQ-9</th>
+                <th>GAD-7</th>
+                <th>Дневник, 7 дн.</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for card in cards %}
+              <tr data-category="{{ card.category }}" class="cat-{{ card.category }}">
+                <td>
+                  <a class="patient-cell" href="{{ url_for('doctor_patient_profile', patient_id=card.id) }}">
+                    <strong>{{ card.full_name }}</strong>
+                    <span class="faint">{{ card.birth_date or 'дата рождения не указана' }}</span>
+                  </a>
+                </td>
+                <td><span class="signal signal-{{ card.category }}">{{ card.signal }}</span></td>
+                <td>{{ delta(card.phq) }}</td>
+                <td>{{ delta(card.gad) }}</td>
+                <td>
+                  {% if card.diary_avg is not none %}{{ card.diary_avg }}{% else %}<span class="muted">—</span>{% endif %}
+                </td>
+                <td>
+                  <a class="btn-link" href="{{ url_for('doctor_patient_stats', patient_id=card.id) }}">открыть</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+          <div class="zone">Пациентов пока нет.</div>
+        {% endif %}
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  (function () {
+    var tiles = document.querySelectorAll(".tile");
+    var rows = document.querySelectorAll(".patients-table tbody tr");
+    var reset = document.getElementById("reset-filter");
+    var active = null;
+
+    function apply(filter) {
+      rows.forEach(function (row) {
+        row.hidden = filter && row.getAttribute("data-category") !== filter;
+      });
+      tiles.forEach(function (t) {
+        t.classList.toggle("is-active", t.getAttribute("data-filter") === filter);
+      });
+      if (reset) reset.hidden = !filter;
+    }
+
+    tiles.forEach(function (tile) {
+      tile.addEventListener("click", function () {
+        var filter = tile.getAttribute("data-filter");
+        active = active === filter ? null : filter;
+        apply(active);
+      });
+    });
+    if (reset) reset.addEventListener("click", function () { active = null; apply(null); });
+  })();
+</script>
+{% endblock %}

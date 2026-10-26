@@ -11,23 +11,24 @@
   </header>
   <main class="screen">
     <div class="stack">
-      <a class="text-link" href="{{ url_for('tests') }}">← К списку тестов</a>
+      <a class="text-link" href="{{ back_url }}">← Назад</a>
 
       <section class="card">
         <div class="card-title">Описание</div>
         <p class="test-description">{{ test.description }}</p>
       </section>
 
-      <form method="post" action="{{ url_for('submit_test', test_id=test.id) }}" class="stack">
+      <form method="post" action="{{ action_url }}" class="stack" id="test-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         {% for question in questions %}
-        <section class="card question-block">
+        <section class="card question-block" data-qpos="{{ question.position }}">
           <div class="question-text">{{ question.position }}. {{ question.text }}</div>
           <div class="answer-strip">
             {% for value in range(question.min_value, question.max_value + 1) %}
             <label class="answer-option">
-              <input type="radio" name="q{{ question.id }}" value="{{ value }}" required>
+              <input type="radio" name="q{{ question.id }}" value="{{ value }}"
+                     {% if strict %}required{% endif %}>
               <span>
                 {%- if test.answer_kind == 'binary' -%}
                   {{ 'Да' if value == 1 else 'Нет' }}
@@ -46,4 +47,37 @@
     </div>
   </main>
 </div>
+
+{% if test.code == 'C-SSRS' %}
+<script>
+  // Ветвление C-SSRS: вопросы 3–5 показываются только если на вопрос 2 «Да»;
+  // уточнение (вопрос 7) показывается только если на вопрос 6 «Да».
+  (function () {
+    function block(pos) {
+      return document.querySelector('.question-block[data-qpos="' + pos + '"]');
+    }
+    function setVisible(el, visible) {
+      if (!el) return;
+      el.style.display = visible ? "" : "none";
+      el.querySelectorAll("input").forEach(function (input) {
+        input.disabled = !visible;
+        if (!visible) input.checked = false;
+      });
+    }
+    function val(pos) {
+      var el = block(pos);
+      if (!el) return null;
+      var checked = el.querySelector("input:checked");
+      return checked ? checked.value : null;
+    }
+    function refresh() {
+      var q2Yes = val(2) === "1";
+      [3, 4, 5].forEach(function (p) { setVisible(block(p), q2Yes); });
+      setVisible(block(7), val(6) === "1");
+    }
+    document.getElementById("test-form").addEventListener("change", refresh);
+    refresh();
+  })();
+</script>
+{% endif %}
 {% endblock %}

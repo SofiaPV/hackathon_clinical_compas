@@ -321,3 +321,120 @@ a:hover { text-decoration: underline; }
   background: var(--brand); border-color: var(--brand); color: #fff;
 }
 .answer-option input:focus-visible + span { box-shadow: 0 0 0 3px var(--brand-soft); }
+
+/* ===== Кабинет врача ===== */
+
+/* Превью сводки на дашборде врача */
+.patients-preview {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  margin: 14px 0 4px; padding: 14px 16px;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: #fbfcfe; text-decoration: none; color: var(--ink);
+}
+.patients-preview:hover { text-decoration: none; background: #f4f7fd; }
+.preview-counts { display: flex; gap: 8px; flex-wrap: wrap; }
+.preview-count {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--ink-soft);
+  padding: 6px 12px; border-radius: 999px; background: #fff;
+  border: 1px solid var(--line);
+}
+.preview-count b { font-size: 15px; }
+.pc-red b { color: var(--danger); }
+.pc-yellow b { color: #b7791f; }
+.pc-white b { color: var(--ink); }
+.pc-green b { color: #1a7f4b; }
+.preview-link { color: var(--brand); font-weight: 600; white-space: nowrap; }
+
+/* Плитки триажа */
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.tile {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  text-align: center; cursor: pointer; font: inherit;
+  padding: 16px 12px; border-radius: 16px; border: 1.5px solid transparent;
+  min-height: 118px; justify-content: space-between;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.tile:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.tile.is-active { box-shadow: 0 0 0 2px currentColor inset, var(--shadow-sm); }
+.tile-title { font-size: 12px; font-weight: 600; line-height: 1.25; }
+.tile-number { font-size: 30px; font-weight: 800; line-height: 1; }
+.tile-note { font-size: 11px; color: var(--ink-soft); line-height: 1.2; }
+.tile-red { background: #fdecec; border-color: #f3b4b6; color: #b4232a; }
+.tile-yellow { background: #fff8e1; border-color: #f3dd94; color: #b7791f; }
+.tile-white { background: #fff; border-color: var(--line); color: var(--ink); }
+.tile-green { background: #e9f8f0; border-color: #bfe8d2; color: #1a7f4b; }
+.tile .tile-note { color: inherit; opacity: .8; }
+
+/* Таблица пациентов */
+.table-scroll { overflow-x: auto; margin-top: 12px; }
+.patients-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.patients-table th {
+  text-align: left; font-size: 12px; font-weight: 600; color: var(--ink-soft);
+  padding: 8px 12px; border-bottom: 1.5px solid var(--line); white-space: nowrap;
+}
+.patients-table td {
+  padding: 12px; border-bottom: 1px solid var(--line); vertical-align: middle;
+}
+.patients-table tbody tr { border-left: 3px solid transparent; }
+.patients-table tr.cat-red { border-left-color: var(--danger); }
+.patients-table tr.cat-yellow { border-left-color: #f5b100; }
+.patients-table tr.cat-white { border-left-color: var(--line); }
+.patients-table tr.cat-green { border-left-color: #2fa36b; }
+.patient-cell { display: flex; flex-direction: column; gap: 2px; text-decoration: none; color: var(--ink); }
+.patient-cell:hover strong { text-decoration: underline; }
+.patient-cell strong { font-weight: 700; }
+.score { font-weight: 600; }
+.trend { margin-left: 6px; font-size: 13px; font-weight: 700; }
+.trend-up { color: var(--danger); }
+.trend-down { color: #1a7f4b; }
+.trend-flat { color: var(--ink-faint); }
+.signal { font-size: 13px; font-weight: 600; }
+.signal-red { color: #b4232a; }
+.signal-yellow { color: #b7791f; }
+.signal-white { color: var(--ink-soft); }
+.signal-green { color: #1a7f4b; }
+
+/* Профиль пациента */
+.profile-card { text-align: center; }
+.profile-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.profile-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.profile-secondary { background: var(--brand-soft); color: var(--brand); }
+.profile-secondary:hover { background: #dbe6fc; }
+
+/* Врачебные тесты в детальной статистике */
+.doctor-test-buttons { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.doctor-test { flex: 1 1 160px; border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; }
+.doctor-test > summary {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 14px 16px; cursor: pointer; list-style: none;
+  background: #f6f8fb; font-weight: 600;
+}
+.doctor-test > summary::-webkit-details-marker { display: none; }
+.doctor-test[open] > summary { border-bottom: 1px solid var(--line); }
+.dt-code { color: var(--ink); }
+.dt-last { font-size: 18px; font-weight: 800; color: var(--brand); }
+.dt-attempts { display: flex; flex-direction: column; }
+.dt-attempt {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 11px 16px; text-decoration: none; color: var(--ink);
+  border-top: 1px solid var(--line);
+}
+.dt-attempt:first-child { border-top: 0; }
+.dt-attempt:hover { background: #fbfcfe; text-decoration: none; }
+.dt-empty { padding: 12px 16px; }
+
+/* Результат теста: ответы */
+.answers-list { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+.answer-row {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--line);
+}
+.answer-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.answer-q { flex: 1; }
+.answer-a { font-weight: 700; white-space: nowrap; }
+
+@media (max-width: 560px) {
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+}

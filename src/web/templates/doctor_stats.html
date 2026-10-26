@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Детальная статистика — Медмонитор{% endblock %}
+{% block body %}
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="title">Детальная статистика</div>
+      <div class="sub">{{ full_name }}</div>
+    </div>
+    <div class="avatar">{{ user.name[:1] }}{{ user.surname[:1] }}</div>
+  </header>
+  <main class="screen">
+    <div class="stack">
+      <a class="text-link" href="{{ url_for('doctor_patient_profile', patient_id=patient_id) }}">← К профилю пациента</a>
+
+      {# Результаты врачебных тестов — самый верхний блок #}
+      <section class="card">
+        <div class="card-title">Врачебные тесты</div>
+        <div class="doctor-test-buttons">
+          {% for summary in summaries %}
+          <details class="doctor-test">
+            <summary>
+              <span class="dt-code">{{ summary.code }}</span>
+              <span class="dt-last">{% if summary.last is not none %}{{ summary.last }}{% else %}—{% endif %}</span>
+            </summary>
+            {% if summary.attempts %}
+              <div class="dt-attempts">
+                {% for attempt in summary.attempts %}
+                <a class="dt-attempt" href="{{ url_for('doctor_result_detail', result_id=attempt.id) }}">
+                  <span>{{ attempt.date }}</span>
+                  <span class="muted">{{ attempt.score }}</span>
+                </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="dt-empty muted small">Тест ещё не проводился.</div>
+            {% endif %}
+          </details>
+          {% endfor %}
+        </div>
+      </section>
+
+      <div class="range-tabs">
+        {% set ranges = [('week','Неделя'),('2weeks','2 недели'),('month','Месяц'),('all','Всё время')] %}
+        {% for key, label in ranges %}
+          <a class="range-tab {% if key == range_key %}is-active{% endif %}"
+             href="{{ url_for('doctor_patient_stats', patient_id=patient_id, range=key) }}">{{ label }}</a>
+        {% endfor %}
+      </div>
+
+      <section class="card chart-block">
+        <div class="card-title">Ежедневный трекер</div>
+        {% if entries %}
+          <div id="tracker-chart" class="chart-full" data-entries='{{ entries|tojson }}'></div>
+          <div class="legend" id="tracker-legend">
+            <button type="button" class="legend-chip is-active" data-series="mood">Настроение</button>
+            <button type="button" class="legend-chip" data-series="anxiety">Тревога</button>
+            <button type="button" class="legend-chip" data-series="energy">Энергия</button>
+          </div>
+        {% else %}
+          <div class="zone">За выбранный период нет записей о состоянии.</div>
+        {% endif %}
+      </section>
+    </div>
+  </main>
+</div>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>MedCharts.initTrackerChart();</script>
+{% endblock %}

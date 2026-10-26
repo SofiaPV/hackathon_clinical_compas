@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ result.title }} — результат — Медмонитор{% endblock %}
+{% block body %}
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="title">{{ result.title }}</div>
+      <div class="sub">{{ date }}</div>
+    </div>
+    <div class="avatar">{{ user.name[:1] }}{{ user.surname[:1] }}</div>
+  </header>
+  <main class="screen">
+    <div class="stack">
+      <a class="text-link" href="{{ url_for('doctor_patient_stats', patient_id=patient_id) }}">← К статистике пациента</a>
+
+      <section class="card">
+        <div class="section-heading">
+          <div class="card-title">Ответы</div>
+          <span class="badge badge-soft">Сумма: {{ result.total_score }}</span>
+        </div>
+        <div class="answers-list">
+          {% for item in items %}
+          <div class="answer-row">
+            <div class="answer-q">{{ item.position }}. {{ item.text }}</div>
+            <div class="answer-a">
+              {% if item.value is none %}
+                <span class="muted">—</span>
+              {% elif result.answer_kind == 'binary' %}
+                {{ 'Да' if item.value == 1 else 'Нет' }}
+              {% else %}
+                {{ item.value }}
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+{% endblock %}

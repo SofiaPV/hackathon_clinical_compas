@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ full_name }} — Медмонитор{% endblock %}
+{% block body %}
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="title">Профиль пациента</div>
+      <div class="sub">{{ user.name }} {{ user.surname }}</div>
+    </div>
+    <div class="avatar">{{ user.name[:1] }}{{ user.surname[:1] }}</div>
+  </header>
+  <main class="screen">
+    <div class="stack">
+      <a class="text-link" href="{{ url_for('doctor_patients') }}">← К списку пациентов</a>
+
+      <section class="card profile-card">
+        <div class="profile-name">{{ full_name }}</div>
+        <div class="muted">{{ birth_date or 'Дата рождения не указана' }}</div>
+
+        <div class="profile-actions">
+          <a class="btn btn-primary btn-block" href="{{ url_for('doctor_patient_tests', patient_id=patient_id) }}">
+            Провести тестирование
+          </a>
+          <a class="btn btn-block profile-secondary" href="{{ url_for('doctor_patient_stats', patient_id=patient_id) }}">
+            Детальная статистика
+          </a>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+{% endblock %}

@@ -134,6 +134,75 @@ TEST_DEFINITIONS = [
             ),
         ],
     },
+    {
+        "code": "HAM-A",
+        "title": "HAM-A",
+        "audience": "doctor",
+        "schedule_days": 14,
+        "threshold": None,
+        "answer_kind": "scale",
+        "description": (
+            "Обследование занимает 20–30 минут, в течение которых специалист "
+            "выслушивает ответ испытуемого по теме вопроса и оценивает его по "
+            "пятибалльной шкале: 0 — отсутствует, 1 — в слабой степени, "
+            "2 — в умеренной степени, 3 — в тяжёлой степени, 4 — в очень тяжёлой "
+            "степени. Первые шесть пунктов отражают тревогу в психической сфере, "
+            "остальные восемь — в соматической сфере."
+        ),
+        "critical_message": None,
+        "severity_bands": [
+            {"min": 0, "max": 7, "label": "Отсутствие тревоги"},
+            {"min": 8, "max": 17, "label": "Симптомы тревожного расстройства"},
+            {"min": 18, "max": 24, "label": "Средняя выраженность"},
+            {"min": 25, "max": 56, "label": "Тяжёлая степень"},
+        ],
+        "questions": [
+            ("Тревожное настроение (озабоченность, ожидание наихудшего, тревожные опасения, раздражительность).", 0, 4, False),
+            ("Напряжение (ощущение напряжения, вздрагивание, легко возникающая плаксивость, дрожь, чувство беспокойства, неспособность расслабиться).", 0, 4, False),
+            ("Страхи (боязнь темноты, незнакомых людей, животных, транспорта, толпы, страх оставаться одному).", 0, 4, False),
+            ("Инсомния (затруднённое засыпание, прерывистый сон, не приносящий отдыха сон с чувством разбитости при пробуждении, кошмарные сновидения).", 0, 4, False),
+            ("Интеллектуальные нарушения (затруднённая концентрация внимания, ухудшение памяти).", 0, 4, False),
+            ("Депрессивное настроение (утрата привычных интересов, утрата чувства удовольствия от хобби, подавленность, ранние пробуждения, суточные колебания состояния).", 0, 4, False),
+            ("Соматические симптомы, мышечные (боли, мышечные подёргивания, напряжение, миоклонические судороги, «скрипение» зубами, срывающийся голос, повышенный мышечный тонус).", 0, 4, False),
+            ("Соматические симптомы, сенсорные (звон в ушах, нечёткость зрения, приливы жара или холода, ощущение слабости, покалывание).", 0, 4, False),
+            ("Сердечно-сосудистые симптомы (тахикардия, сердцебиение, боль в груди, пульсация в сосудах, чувство слабости, частые вздохи, диспноэ).", 0, 4, False),
+            ("Респираторные симптомы (чувство давления или сжатия грудной клетки, ощущение удушья, частые вздохи, диспноэ).", 0, 4, False),
+            ("Гастроинтестинальные симптомы (затруднённое глотание, метеоризм, боль в животе, изжога, чувство переполнения желудка, тошнота, рвота, урчание, диарея, снижение веса, запоры).", 0, 4, False),
+            ("Мочеполовые симптомы (учащённое мочеиспускание, сильные позывы, аменорея, меноррагия, фригидность, преждевременная эякуляция, утрата либидо, импотенция).", 0, 4, False),
+            ("Вегетативные симптомы (сухость во рту, покраснение или бледность кожных покровов, повышенное потоотделение, головные боли с чувством напряжения).", 0, 4, False),
+            ("Поведение при осмотре (ёрзанье на месте, беспокойная жестикуляция или походка, тремор рук, нахмуривание бровей, напряжённое выражение лица, вздохи или учащённое дыхание, бледность лица, частое сглатывание слюны и т.д.).", 0, 4, False),
+        ],
+    },
+    {
+        "code": "C-SSRS",
+        "title": "Колумбийская шкала оценки тяжести суицида (C-SSRS)",
+        "audience": "doctor",
+        "schedule_days": 14,
+        "threshold": None,
+        "answer_kind": "binary",
+        "description": (
+            "Ответьте на вопросы о мыслях и переживаниях за последний месяц. "
+            "Вопрос 6 относится ко всей жизни; при ответе «Да» уточните, "
+            "происходило ли это в последние 3 месяца. Сначала ответьте на "
+            "вопросы 1 и 2. Если на вопрос 2 ответ «Да», переходите к вопросам "
+            "3, 4, 5 и 6. Если «Нет» — сразу к вопросу 6. Баллы не суммируются: "
+            "уровень риска определяется по наиболее серьёзному положительному "
+            "ответу с учётом давности событий (вопросы 1–2 — низкий; вопросы 3 "
+            "или 6 давностью более 3 месяцев — умеренный; вопросы 4 или 5 за "
+            "последний месяц либо вопрос 6 за последние 3 месяца — высокий)."
+        ),
+        "critical_message": None,
+        "severity_bands": None,
+        "questions": [
+            ("Возникало ли у Вас желание умереть или заснуть и не просыпаться?", 0, 1, False),
+            ("Думали ли Вы в самом деле о том, чтобы убить себя?", 0, 1, False),
+            ("Думали ли Вы о том, как Вы могли бы это сделать?", 0, 1, False),
+            ("Посещали ли Вас подобные мысли, и было ли у Вас какое-нибудь намерение действовать в соответствии с ними?", 0, 1, False),
+            ("Начали ли Вы разрабатывать или уже разработали детальный план самоубийства? Намереваетесь ли Вы осуществить этот план?", 0, 1, False),
+            ("Вы когда-нибудь что-нибудь делали, начинали что-то делать или готовились сделать что-нибудь, чтобы покончить с собой?", 0, 1, False),
+            ("Уточнение к вопросу 6: было ли это в последние 3 месяца?", 0, 1, False),
+        ],
+    },
 ]
 
 
@@ -201,7 +270,8 @@ def create_app() -> Flask:
                     threshold INTEGER,
                     answer_kind TEXT NOT NULL DEFAULT 'scale',
                     critical_message TEXT,
-                    severity_bands TEXT
+                    severity_bands TEXT,
+                    audience TEXT NOT NULL DEFAULT 'patient'
                 );
                 CREATE TABLE IF NOT EXISTS Test_Questions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -246,10 +316,22 @@ def create_app() -> Flask:
                     ON Test_Results(patient_id, test_id, created_at);
                 """
             )
-            # Migration for databases created before severity_bands existed.
-            columns = {row[1] for row in connection.execute("PRAGMA table_info(Tests)")}
-            if "severity_bands" not in columns:
+            # Migrations for databases created before these columns existed.
+            test_columns = {
+                row[1] for row in connection.execute("PRAGMA table_info(Tests)")
+            }
+            if "severity_bands" not in test_columns:
                 connection.execute("ALTER TABLE Tests ADD COLUMN severity_bands TEXT")
+            if "audience" not in test_columns:
+                connection.execute(
+                    "ALTER TABLE Tests ADD COLUMN audience TEXT NOT NULL "
+                    "DEFAULT 'patient'"
+                )
+            user_columns = {
+                row[1] for row in connection.execute("PRAGMA table_info(Users)")
+            }
+            if "birth_date" not in user_columns:
+                connection.execute("ALTER TABLE Users ADD COLUMN birth_date TEXT")
             for spec in TEST_DEFINITIONS:
                 existing = connection.execute(
                     "SELECT id FROM Tests WHERE code = ?", (spec["code"],)
@@ -261,8 +343,8 @@ def create_app() -> Flask:
                     """
                     INSERT INTO Tests
                         (code, title, description, schedule_days, threshold,
-                         answer_kind, critical_message, severity_bands)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                         answer_kind, critical_message, severity_bands, audience)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         spec["code"],
@@ -273,6 +355,7 @@ def create_app() -> Flask:
                         spec.get("answer_kind", "scale"),
                         spec.get("critical_message"),
                         json.dumps(bands, ensure_ascii=False) if bands else None,
+                        spec.get("audience", "patient"),
                     ),
                 )
                 test_id = cursor.lastrowid
@@ -309,6 +392,7 @@ def create_app() -> Flask:
             surname = request.form.get("lastname", "").strip()
             name = request.form.get("firstname", "").strip()
             second_name = request.form.get("patronymic", "").strip() or None
+            birth_date = request.form.get("birth_date", "").strip() or None
             is_doctor = request.form.get("is_doctor") == "on"
 
             if len(password) < 8:
@@ -333,6 +417,12 @@ def create_app() -> Flask:
                     repository.create_doctor(user.id)
                 else:
                     repository.create_patient(user.id)
+                if birth_date:
+                    with connect_database() as connection:
+                        connection.execute(
+                            "UPDATE Users SET birth_date = ? WHERE id = ?",
+                            (birth_date, user.id),
+                        )
             except (ValueError, sqlite3.IntegrityError) as error:
                 flash(str(error), "error")
                 return render_template("register.html")
@@ -409,8 +499,12 @@ def create_app() -> Flask:
                     """,
                     (session["user_id"],),
                 ).fetchall()
+                _, counts = all_patient_cards(connection)
             return render_template(
-                "doctor.html", user=session_user(), patients=patients
+                "doctor.html",
+                user=session_user(),
+                patients=patients,
+                counts=counts,
             )
         if session.get("role") == "patient":
             with connect_database() as connection:
@@ -808,6 +902,9 @@ def create_app() -> Flask:
             user=session_user(),
             test=test,
             questions=questions,
+            action_url=url_for("submit_test", test_id=test["id"]),
+            back_url=url_for("tests"),
+            strict=True,
         )
 
     @app.post("/tests/<int:test_id>")
@@ -841,6 +938,9 @@ def create_app() -> Flask:
                         user=session_user(),
                         test=test,
                         questions=questions,
+                        action_url=url_for("submit_test", test_id=test["id"]),
+                        back_url=url_for("tests"),
+                        strict=True,
                     )
                 answers[question["id"]] = value
                 if question["is_critical"] and value > 0:
@@ -929,7 +1029,7 @@ def create_app() -> Flask:
         connection.execute(
             """
             INSERT OR IGNORE INTO Patient_Has_Test (patient_id, test_id, assigned_at)
-            SELECT ?, id, ? FROM Tests
+            SELECT ?, id, ? FROM Tests WHERE audience = 'patient'
             """,
             (patient_id, datetime.now().astimezone().isoformat(timespec="seconds")),
         )
@@ -972,7 +1072,7 @@ def create_app() -> Flask:
             SELECT DISTINCT t.id, t.critical_message
             FROM Tests t
             JOIN Test_Questions q ON q.test_id = t.id AND q.is_critical = 1
-            WHERE t.critical_message IS NOT NULL
+            WHERE t.critical_message IS NOT NULL AND t.audience = 'patient'
             """
         ).fetchall()
         alerts = []
@@ -999,6 +1099,418 @@ def create_app() -> Flask:
             if answer is not None and answer["value"] is not None and answer["value"] > 0:
                 alerts.append(test["critical_message"])
         return alerts
+
+    # ------------------------------------------------------------------ #
+    #  Doctor cabinet: triage, patient profiles and clinician-run tests  #
+    # ------------------------------------------------------------------ #
+
+    CATEGORY_PRIORITY = {"red": 0, "yellow": 1, "white": 2, "green": 3}
+
+    def _require_doctor():
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        if session.get("role") != "doctor":
+            flash("Этот раздел доступен только врачу.", "error")
+            return redirect(url_for("dashboard"))
+        return None
+
+    def _fmt_date(value):
+        if not value:
+            return None
+        try:
+            return datetime.fromisoformat(value).strftime("%d.%m.%Y")
+        except ValueError:
+            return value
+
+    def _fmt_datetime(value):
+        try:
+            return datetime.fromisoformat(value).strftime("%d.%m.%Y %H:%M")
+        except (ValueError, TypeError):
+            return value
+
+    def _full_name(row):
+        return " ".join(
+            part for part in (row["name"], row["surname"], row["second_name"]) if part
+        )
+
+    def _load_patient(connection, patient_id):
+        return connection.execute(
+            """
+            SELECT u.id, u.name, u.surname, u.second_name, u.birth_date, u.email
+            FROM Patients p JOIN Users u ON u.id = p.id
+            WHERE u.id = ?
+            """,
+            (patient_id,),
+        ).fetchone()
+
+    def _recent_results(connection, patient_id, code, limit=2):
+        return connection.execute(
+            """
+            SELECT r.id, r.total_score, r.created_at
+            FROM Test_Results r JOIN Tests t ON t.id = r.test_id
+            WHERE r.patient_id = ? AND t.code = ?
+            ORDER BY r.created_at DESC, r.id DESC
+            LIMIT ?
+            """,
+            (patient_id, code, limit),
+        ).fetchall()
+
+    def _delta_cell(results):
+        """Latest score plus direction/magnitude of change vs the previous one."""
+        if not results:
+            return {"value": None, "dir": None, "mag": None}
+        last = results[0]["total_score"]
+        if len(results) < 2:
+            return {"value": last, "dir": None, "mag": None}
+        diff = last - results[1]["total_score"]
+        if diff > 0:
+            return {"value": last, "dir": "up", "mag": diff}
+        if diff < 0:
+            return {"value": last, "dir": "down", "mag": -diff}
+        return {"value": last, "dir": "flat", "mag": 0}
+
+    def _phq9_q9_positive(connection, patient_id):
+        latest = connection.execute(
+            """
+            SELECT r.id FROM Test_Results r JOIN Tests t ON t.id = r.test_id
+            WHERE r.patient_id = ? AND t.code = 'PHQ_9'
+            ORDER BY r.created_at DESC, r.id DESC LIMIT 1
+            """,
+            (patient_id,),
+        ).fetchone()
+        if latest is None:
+            return False
+        ans = connection.execute(
+            """
+            SELECT ta.value FROM Test_Answers ta
+            JOIN Test_Questions q ON q.id = ta.question_id AND q.is_critical = 1
+            WHERE ta.result_id = ?
+            """,
+            (latest["id"],),
+        ).fetchone()
+        return ans is not None and ans["value"] is not None and ans["value"] > 0
+
+    def doctor_patient_card(connection, patient):
+        """Triage card for one patient: category, signal and trend columns."""
+        pid = patient["id"]
+        phq = _recent_results(connection, pid, "PHQ_9")
+        gad = _recent_results(connection, pid, "GAD-7")
+        phq_cell = _delta_cell(phq)
+        gad_cell = _delta_cell(gad)
+        red_flag = _phq9_q9_positive(connection, pid)
+
+        now = datetime.now().astimezone()
+        last_any = connection.execute(
+            "SELECT MAX(created_at) AS m FROM Emotions WHERE user_id = ?", (pid,)
+        ).fetchone()["m"]
+        days_since = None
+        if last_any:
+            days_since = (now - _aware(datetime.fromisoformat(last_any))).days
+        cutoff7 = now - timedelta(days=7)
+        avg_row = connection.execute(
+            "SELECT AVG(mood) AS a FROM Emotions "
+            "WHERE user_id = ? AND mood IS NOT NULL AND created_at >= ?",
+            (pid, cutoff7.isoformat(timespec="seconds")),
+        ).fetchone()
+        diary_avg = round(avg_row["a"], 1) if avg_row["a"] is not None else None
+
+        no_data = last_any is None or (days_since is not None and days_since > 7)
+        phq_up = phq_cell["mag"] if phq_cell["dir"] == "up" else 0
+        gad_up = gad_cell["mag"] if gad_cell["dir"] == "up" else 0
+        worsening = phq_up >= 5 or gad_up >= 5
+
+        if red_flag:
+            category, signal = "red", "PHQ-9 п.9 > 0"
+        elif worsening:
+            category = "yellow"
+            p = phq_up if phq_up >= 5 else 0
+            g = gad_up if gad_up >= 5 else 0
+            if p and g:
+                signal = f"Ухудшение GAD-7 +{g} и PHQ-9 +{p}"
+            elif p:
+                signal = f"Ухудшение PHQ-9 +{p}"
+            else:
+                signal = f"Ухудшение GAD-7 +{g}"
+        elif no_data:
+            category = "white"
+            signal = (
+                f"Нет данных {days_since} дней" if days_since is not None
+                else "Нет данных"
+            )
+        else:
+            category = "green"
+            phq_last, gad_last = phq_cell["value"], gad_cell["value"]
+            if (
+                phq_last is not None and phq_last < 5
+                and gad_last is not None and gad_last < 5
+            ):
+                signal = "Ремиссия"
+            else:
+                signal = "Стабильно"
+
+        return {
+            "id": pid,
+            "full_name": _full_name(patient),
+            "birth_date": _fmt_date(patient["birth_date"]),
+            "category": category,
+            "signal": signal,
+            "phq": phq_cell,
+            "gad": gad_cell,
+            "diary_avg": diary_avg,
+        }
+
+    def all_patient_cards(connection):
+        patients = connection.execute(
+            """
+            SELECT u.id, u.name, u.surname, u.second_name, u.birth_date
+            FROM Patients p JOIN Users u ON u.id = p.id
+            """
+        ).fetchall()
+        cards = [doctor_patient_card(connection, p) for p in patients]
+        cards.sort(key=lambda c: (CATEGORY_PRIORITY[c["category"]], c["full_name"]))
+        counts = {"red": 0, "yellow": 0, "white": 0, "green": 0}
+        for card in cards:
+            counts[card["category"]] += 1
+        return cards, counts
+
+    @app.get("/doctor/patients")
+    def doctor_patients():
+        guard = _require_doctor()
+        if guard is not None:
+            return guard
+        with connect_database() as connection:
+            cards, counts = all_patient_cards(connection)
+        return render_template(
+            "patients.html", user=session_user(), cards=cards, counts=counts
+        )
+
+    @app.get("/doctor/patients/<int:patient_id>")
+    def doctor_patient_profile(patient_id: int):
+        guard = _require_doctor()
+        if guard is not None:
+            return guard
+        with connect_database() as connection:
+            patient = _load_patient(connection, patient_id)
+        if patient is None:
+            flash("Пациент не найден.", "error")
+            return redirect(url_for("doctor_patients"))
+        return render_template(
+            "patient_profile.html",
+            user=session_user(),
+            patient_id=patient_id,
+            full_name=_full_name(patient),
+            birth_date=_fmt_date(patient["birth_date"]),
+        )
+
+    @app.get("/doctor/patients/<int:patient_id>/tests")
+    def doctor_patient_tests(patient_id: int):
+        guard = _require_doctor()
+        if guard is not None:
+            return guard
+        with connect_database() as connection:
+            patient = _load_patient(connection, patient_id)
+            if patient is None:
+                flash("Пациент не найден.", "error")
+                return redirect(url_for("doctor_patients"))
+            doctor_tests = connection.execute(
+                "SELECT id, title FROM Tests WHERE audience = 'doctor' ORDER BY id"
+            ).fetchall()
+        return render_template(
+            "doctor_tests.html",
+            user=session_user(),
+            patient_id=patient_id,
+            full_name=_full_name(patient),
+            tests=doctor_tests,
+        )
+
+    def _doctor_test_or_redirect(connection, patient_id, test_id):
+        test, questions = _load_test(connection, test_id)
+        if test is None or test["audience"] != "doctor":
+            return None, None
+        return test, questions
+
+    @app.get("/doctor/patients/<int:patient_id>/tests/<int:test_id>")
+    def doctor_take_test(patient_id: int, test_id: int):
+        guard = _require_doctor()
+        if guard is not None:
+            return guard
+        with connect_database() as connection:
+            test, questions = _doctor_test_or_redirect(
+                connection, patient_id, test_id
+            )
+        if test is None:
+            flash("Тест не найден.", "error")
+            return redirect(url_for("doctor_patient_tests", patient_id=patient_id))
+        return render_template(
+            "take_test.html",
+            user=session_user(),
+            test=test,
+            questions=questions,
+            action_url=url_for(
+                "doctor_submit_test", patient_id=patient_id, test_id=test_id
+            ),
+            back_url=url_for("doctor_patient_tests", patient_id=patient_id),
+            strict=(test["code"] != "C-SSRS"),
+        )
+
+    @app.post("/doctor/patients/<int:patient_id>/tests/<int:test_id>")
+    def doctor_submit_test(patient_id: int, test_id: int):
+        guard = _require_doctor()
+        if guard is not None:
+            return guard
+        with connect_database() as connection:
+            test, questions = _doctor_test_or_redirect(
+                connection, patient_id, test_id
+            )
+            if test is None:
+                flash("Тест не найден.", "error")
+                return redirect(
+                    url_for("doctor_patient_tests", patient_id=patient_id)
+                )
+            # Lenient validation: C-SSRS skips questions by branching, so we
+            # record only the questions that were actually answered.
+            answers: dict[int, int] = {}
+            for question in questions:
+                raw = request.form.get(f"q{question['id']}")
+                if raw in (None, ""):
+                    continue
+                try:
+                    value = int(raw)
+                except ValueError:
+                    continue
+                if question["min_value"] <= value <= question["max_value"]:
+                    answers[question["id"]] = value
+            if not answers:
+                flash("Ответьте хотя бы на один вопрос теста.", "error")
+                return render_template(
+                    "take_test.html",
+                    user=session_user(),
+                    test=test,
+                    questions=questions,
+                    action_url=url_for(
+                        "doctor_submit_test",
+                        patient_id=patient_id,
+                        test_id=test_id,
+                    ),
+                    back_url=url_for(
+                        "doctor_patient_tests", patient_id=patient_id
+                    ),
+                    strict=(test["code"] != "C-SSRS"),
+                )
+            total_score = sum(answers.values())
+            cursor = connection.execute(
+                """
+                INSERT INTO Test_Results
+                    (test_id, patient_id, created_at, total_score)
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    test_id,
+                    patient_id,
+                    datetime.now().astimezone().isoformat(timespec="seconds"),
+                    total_score,
+                ),
+            )
+            result_id = cursor.lastrowid
+            for question_id, value in answers.items():
+                connection.execute(
+                    "INSERT INTO Test_Answers (result_id, question_id, value) "
+                    "VALUES (?, ?, ?)",
+                    (result_id, question_id, value),
+                )
+        flash("Результаты теста сохранены.", "success")
+        return redirect(url_for("doctor_patient_stats", patient_id=patient_id))
+
+    @app.get("/doctor/patients/<int:patient_id>/stats")
+    def doctor_patient_stats(patient_id: int):
+        guard = _require_doctor()
+        if guard is not None:
+            return guard
+        ranges = {"week": 7, "2weeks": 14, "month": 30, "all": None}
+        range_key = request.args.get("range", "all")
+        if range_key not in ranges:
+            range_key = "all"
+        with connect_database() as connection:
+            patient = _load_patient(connection, patient_id)
+            if patient is None:
+                flash("Пациент не найден.", "error")
+                return redirect(url_for("doctor_patients"))
+            doctor_tests = connection.execute(
+                "SELECT id, code, title FROM Tests WHERE audience = 'doctor' "
+                "ORDER BY id"
+            ).fetchall()
+            summaries = []
+            for test in doctor_tests:
+                results = connection.execute(
+                    """
+                    SELECT id, total_score, created_at FROM Test_Results
+                    WHERE patient_id = ? AND test_id = ?
+                    ORDER BY created_at DESC, id DESC
+                    """,
+                    (patient_id, test["id"]),
+                ).fetchall()
+                summaries.append(
+                    {
+                        "code": test["code"],
+                        "last": results[0]["total_score"] if results else None,
+                        "attempts": [
+                            {
+                                "id": row["id"],
+                                "date": _fmt_datetime(row["created_at"]),
+                                "score": row["total_score"],
+                            }
+                            for row in results
+                        ],
+                    }
+                )
+        entries = emotion_series(patient_id, days=ranges[range_key])
+        return render_template(
+            "doctor_stats.html",
+            user=session_user(),
+            patient_id=patient_id,
+            full_name=_full_name(patient),
+            summaries=summaries,
+            entries=entries,
+            range_key=range_key,
+        )
+
+    @app.get("/doctor/results/<int:result_id>")
+    def doctor_result_detail(result_id: int):
+        guard = _require_doctor()
+        if guard is not None:
+            return guard
+        with connect_database() as connection:
+            result = connection.execute(
+                """
+                SELECT r.id, r.created_at, r.total_score, r.patient_id,
+                       t.id AS test_id, t.title, t.answer_kind
+                FROM Test_Results r JOIN Tests t ON t.id = r.test_id
+                WHERE r.id = ?
+                """,
+                (result_id,),
+            ).fetchone()
+            if result is None:
+                flash("Результат не найден.", "error")
+                return redirect(url_for("doctor_patients"))
+            rows = connection.execute(
+                """
+                SELECT q.position, q.text, ta.value
+                FROM Test_Questions q
+                LEFT JOIN Test_Answers ta
+                    ON ta.question_id = q.id AND ta.result_id = ?
+                WHERE q.test_id = ?
+                ORDER BY q.position, q.id
+                """,
+                (result_id, result["test_id"]),
+            ).fetchall()
+        return render_template(
+            "result_detail.html",
+            user=session_user(),
+            result=result,
+            date=_fmt_datetime(result["created_at"]),
+            items=rows,
+            patient_id=result["patient_id"],
+        )
 
     return app
 
