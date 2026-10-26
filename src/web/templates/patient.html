@@ -8,6 +8,29 @@
   </header>
   <main class="screen">
     <div class="stack">
+      {% if critical_alerts %}
+        {% for message in critical_alerts %}
+        <section class="card alert-critical" role="alert">
+          <div class="alert-critical-title">Пожалуйста, обратите внимание</div>
+          <p>{{ message }}</p>
+        </section>
+        {% endfor %}
+      {% endif %}
+
+      {% if pending_tests %}
+      <a class="card test-banner" href="{{ url_for('tests') }}">
+        <span class="test-banner-icon" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="9" fill="#f5b100"/>
+            <rect x="11" y="6.5" width="2" height="7.5" rx="1" fill="#fff"/>
+            <circle cx="12" cy="17" r="1.2" fill="#fff"/>
+          </svg>
+        </span>
+        <span class="test-banner-text">У вас есть непройденные тесты</span>
+        <span class="test-banner-arrow" aria-hidden="true">→</span>
+      </a>
+      {% endif %}
+
       <section class="card">
         <div class="section-heading">
           <div class="card-title">Сегодня</div>

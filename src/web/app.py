@@ -39,6 +39,64 @@ PUBLIC_BASE_URL = os.environ.get(
 ).rstrip("/")
 
 
+# Declarative catalogue of timed tests. Adding a new test is just another entry
+# here (new tests are picked up and assigned to every patient automatically).
+# A question marked "critical" can raise a red alert for the patient and, later,
+# notify the patient's doctor (see the hook in save_test_result()).
+TEST_DEFINITIONS = [
+    {
+        "code": "PHQ_9",
+        "title": "PHQ_9",
+        "schedule_days": 14,
+        "threshold": 10,
+        "answer_kind": "scale",  # 'scale' -> 0..max, 'binary' -> Нет/Да
+        "description": (
+            "Оцените, пожалуйста, насколько часто следующие проблемы беспокоили "
+            "вас в течение прошедших двух недель. Для ответов используйте "
+            "следующую шкалу: 0 = «совсем нет»; 1 = «в течение нескольких дней»; "
+            "2 «более, чем половину этого времени»; 3 = «почти каждый день»."
+        ),
+        "critical_message": (
+            "Пожалуйста, если вы чувствуете, что можете причинить себе вред, "
+            "не оставайтесь со своими переживаниями один на один. Обратитесь "
+            "на горячую линию (телефон-заглушка)."
+        ),
+        # (text, min, max, is_critical)
+        "questions": [
+            ("Снижение интереса и удовольствия от привычных дел", 0, 3, False),
+            ("Чувство подавленности или безнадежности", 0, 3, False),
+            (
+                "Проблемы со сном (неспособность заснуть, раннее пробуждение "
+                "или слишком долгий сон)",
+                0, 3, False,
+            ),
+            ("Чувство усталости или недостатка энергии", 0, 3, False),
+            ("Плохой аппетит или переедание", 0, 3, False),
+            (
+                "Плохое мнение о себе или чувство, что не смог оправдать "
+                "ожиданий моей семьи",
+                0, 3, False,
+            ),
+            (
+                "Проблемы с концентрацией внимания (например, при чтении газеты "
+                "или просмотре телевизионной передачи).",
+                0, 3, False,
+            ),
+            (
+                "Замедленность движений или речи, которая стала заметна другим "
+                "людям, или, напротив, суетливость, когда движения и речь стали "
+                "более быстрыми и беспокойными",
+                0, 3, False,
+            ),
+            (
+                "Мысли о том, что мне бы хотелось умереть или причинить себе боль",
+                0, 3, True,
+            ),
+        ],
+    },
+]
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
@@ -88,6 +146,103 @@ def create_app() -> Flask:
             )
 
     initialize_link_tokens()
+
+    def initialize_tests() -> None:
+        with sqlite3.connect(DATABASE_PATH) as connection:
+            connection.execute("PRAGMA foreign_keys = ON")
+            connection.executescript(
+                """
+                CREATE TABLE IF NOT EXISTS Tests (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    code TEXT NOT NULL UNIQUE,
+                    title TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    schedule_days INTEGER NOT NULL,
+                    threshold INTEGER,
+                    answer_kind TEXT NOT NULL DEFAULT 'scale',
+                    critical_message TEXT
+                );
+                CREATE TABLE IF NOT EXISTS Test_Questions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    test_id INTEGER NOT NULL,
+                    position INTEGER NOT NULL,
+                    text TEXT NOT NULL,
+                    min_value INTEGER NOT NULL DEFAULT 0,
+                    max_value INTEGER NOT NULL DEFAULT 3,
+                    is_critical INTEGER NOT NULL DEFAULT 0,
+                    FOREIGN KEY (test_id) REFERENCES Tests(id) ON DELETE CASCADE
+                );
+                CREATE TABLE IF NOT EXISTS Patient_Has_Test (
+                    patient_id INTEGER NOT NULL,
+                    test_id INTEGER NOT NULL,
+                    assigned_at TEXT NOT NULL,
+                    PRIMARY KEY (patient_id, test_id),
+                    FOREIGN KEY (patient_id) REFERENCES Patients(id)
+                        ON DELETE CASCADE,
+                    FOREIGN KEY (test_id) REFERENCES Tests(id) ON DELETE CASCADE
+                );
+                CREATE TABLE IF NOT EXISTS Test_Results (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    test_id INTEGER NOT NULL,
+                    patient_id INTEGER NOT NULL,
+                    created_at TEXT NOT NULL,
+                    total_score INTEGER NOT NULL,
+                    FOREIGN KEY (test_id) REFERENCES Tests(id) ON DELETE CASCADE,
+                    FOREIGN KEY (patient_id) REFERENCES Patients(id)
+                        ON DELETE CASCADE
+                );
+                CREATE TABLE IF NOT EXISTS Test_Answers (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    result_id INTEGER NOT NULL,
+                    question_id INTEGER NOT NULL,
+                    value INTEGER NOT NULL,
+                    FOREIGN KEY (result_id) REFERENCES Test_Results(id)
+                        ON DELETE CASCADE,
+                    FOREIGN KEY (question_id) REFERENCES Test_Questions(id)
+                        ON DELETE CASCADE
+                );
+                CREATE INDEX IF NOT EXISTS idx_test_results_patient
+                    ON Test_Results(patient_id, test_id, created_at);
+                """
+            )
+            for spec in TEST_DEFINITIONS:
+                existing = connection.execute(
+                    "SELECT id FROM Tests WHERE code = ?", (spec["code"],)
+                ).fetchone()
+                if existing is not None:
+                    continue
+                cursor = connection.execute(
+                    """
+                    INSERT INTO Tests
+                        (code, title, description, schedule_days, threshold,
+                         answer_kind, critical_message)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        spec["code"],
+                        spec["title"],
+                        spec["description"],
+                        spec["schedule_days"],
+                        spec.get("threshold"),
+                        spec.get("answer_kind", "scale"),
+                        spec.get("critical_message"),
+                    ),
+                )
+                test_id = cursor.lastrowid
+                for position, (text, low, high, critical) in enumerate(
+                    spec["questions"], start=1
+                ):
+                    connection.execute(
+                        """
+                        INSERT INTO Test_Questions
+                            (test_id, position, text, min_value, max_value,
+                             is_critical)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        """,
+                        (test_id, position, text, low, high, 1 if critical else 0),
+                    )
+
+    initialize_tests()
 
     @app.get("/")
     def index():
@@ -222,12 +377,21 @@ def create_app() -> Flask:
                     """,
                     (session["user_id"],),
                 ).fetchall()
+                ensure_test_assignments(connection, session["user_id"])
+                pending_tests = patient_pending_tests(
+                    connection, session["user_id"]
+                )
+                critical_alerts = patient_critical_alerts(
+                    connection, session["user_id"]
+                )
             entries = emotion_series(session["user_id"], days=14)
             return render_template(
                 "patient.html",
                 user=session_user(),
                 doctors=doctors,
                 entries=entries,
+                pending_tests=pending_tests,
+                critical_alerts=critical_alerts,
             )
         session.clear()
         flash(
@@ -544,6 +708,136 @@ def create_app() -> Flask:
             "notes.html", user=session_user(), notes=notes_list
         )
 
+    @app.get("/tests")
+    def tests():
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        if session.get("role") != "patient":
+            flash("Тесты доступны только пациенту.", "error")
+            return redirect(url_for("dashboard"))
+        with connect_database() as connection:
+            ensure_test_assignments(connection, session["user_id"])
+            pending = patient_pending_tests(connection, session["user_id"])
+            critical_alerts = patient_critical_alerts(
+                connection, session["user_id"]
+            )
+        return render_template(
+            "tests.html",
+            user=session_user(),
+            tests=pending,
+            critical_alerts=critical_alerts,
+        )
+
+    def _load_test(connection, test_id: int):
+        test = connection.execute(
+            "SELECT * FROM Tests WHERE id = ?", (test_id,)
+        ).fetchone()
+        if test is None:
+            return None, []
+        questions = connection.execute(
+            """
+            SELECT * FROM Test_Questions
+            WHERE test_id = ?
+            ORDER BY position, id
+            """,
+            (test_id,),
+        ).fetchall()
+        return test, questions
+
+    @app.get("/tests/<int:test_id>")
+    def take_test(test_id: int):
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        if session.get("role") != "patient":
+            flash("Тесты доступны только пациенту.", "error")
+            return redirect(url_for("dashboard"))
+        with connect_database() as connection:
+            test, questions = _load_test(connection, test_id)
+        if test is None:
+            flash("Тест не найден.", "error")
+            return redirect(url_for("tests"))
+        return render_template(
+            "take_test.html",
+            user=session_user(),
+            test=test,
+            questions=questions,
+        )
+
+    @app.post("/tests/<int:test_id>")
+    def submit_test(test_id: int):
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        if session.get("role") != "patient":
+            flash("Тесты доступны только пациенту.", "error")
+            return redirect(url_for("dashboard"))
+
+        with connect_database() as connection:
+            test, questions = _load_test(connection, test_id)
+            if test is None:
+                flash("Тест не найден.", "error")
+                return redirect(url_for("tests"))
+
+            answers: dict[int, int] = {}
+            critical_positive = False
+            for question in questions:
+                raw = request.form.get(f"q{question['id']}")
+                try:
+                    value = int(raw) if raw not in (None, "") else None
+                except (TypeError, ValueError):
+                    value = None
+                if value is None or not (
+                    question["min_value"] <= value <= question["max_value"]
+                ):
+                    flash("Ответьте на все вопросы теста.", "error")
+                    return render_template(
+                        "take_test.html",
+                        user=session_user(),
+                        test=test,
+                        questions=questions,
+                    )
+                answers[question["id"]] = value
+                if question["is_critical"] and value > 0:
+                    critical_positive = True
+
+            total_score = sum(answers.values())
+            cursor = connection.execute(
+                """
+                INSERT INTO Test_Results
+                    (test_id, patient_id, created_at, total_score)
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    test_id,
+                    session["user_id"],
+                    datetime.now().astimezone().isoformat(timespec="seconds"),
+                    total_score,
+                ),
+            )
+            result_id = cursor.lastrowid
+            for question_id, value in answers.items():
+                connection.execute(
+                    """
+                    INSERT INTO Test_Answers (result_id, question_id, value)
+                    VALUES (?, ?, ?)
+                    """,
+                    (result_id, question_id, value),
+                )
+
+        # Architecture hook for the future: when a critical question is answered
+        # positively (or the score crosses the test threshold), this is where
+        # the patient's doctor would be notified that critical help may be
+        # needed. For now we only surface the alert to the patient on their
+        # dashboard via patient_critical_alerts().
+        if critical_positive:
+            app.logger.info(
+                "Critical response recorded for patient %s on test %s",
+                session["user_id"],
+                test["code"],
+            )
+
+        flash("Тест пройден. Спасибо!", "success")
+        return redirect(url_for("dashboard"))
+
     @app.post("/logout")
     def logout():
         session.clear()
@@ -578,6 +872,86 @@ def create_app() -> Flask:
             }
             for entry in entries
         ]
+
+    def _aware(moment: datetime) -> datetime:
+        return moment if moment.tzinfo else moment.astimezone()
+
+    def ensure_test_assignments(connection, patient_id: int) -> None:
+        """Assign every catalogue test to the patient once. New tests added to
+        the catalogue later are picked up here on the next page load."""
+        connection.execute(
+            """
+            INSERT OR IGNORE INTO Patient_Has_Test (patient_id, test_id, assigned_at)
+            SELECT ?, id, ? FROM Tests
+            """,
+            (patient_id, datetime.now().astimezone().isoformat(timespec="seconds")),
+        )
+
+    def patient_pending_tests(connection, patient_id: int) -> list[dict]:
+        """Tests the patient currently owes. A test is due when it has never
+        been taken (available from registration) or when at least one schedule
+        interval has passed since the last time it was completed. It never
+        accumulates: at most one pending pass per test."""
+        rows = connection.execute(
+            """
+            SELECT t.id, t.title, t.schedule_days,
+                (SELECT MAX(created_at) FROM Test_Results r
+                 WHERE r.test_id = t.id AND r.patient_id = ?) AS last_at
+            FROM Tests t
+            JOIN Patient_Has_Test pht
+                ON pht.test_id = t.id AND pht.patient_id = ?
+            ORDER BY t.id
+            """,
+            (patient_id, patient_id),
+        ).fetchall()
+        now = datetime.now().astimezone()
+        pending = []
+        for row in rows:
+            if row["last_at"] is None:
+                due = True
+            else:
+                anchor = _aware(datetime.fromisoformat(row["last_at"]))
+                due = now >= anchor + timedelta(days=row["schedule_days"])
+            if due:
+                pending.append({"id": row["id"], "title": row["title"]})
+        return pending
+
+    def patient_critical_alerts(connection, patient_id: int) -> list[str]:
+        """Active critical alerts: the latest result of a test with a critical
+        question answered above its minimum. Clears once the test is retaken
+        with a non-positive answer."""
+        tests = connection.execute(
+            """
+            SELECT DISTINCT t.id, t.critical_message
+            FROM Tests t
+            JOIN Test_Questions q ON q.test_id = t.id AND q.is_critical = 1
+            WHERE t.critical_message IS NOT NULL
+            """
+        ).fetchall()
+        alerts = []
+        for test in tests:
+            latest = connection.execute(
+                """
+                SELECT id FROM Test_Results
+                WHERE patient_id = ? AND test_id = ?
+                ORDER BY created_at DESC, id DESC LIMIT 1
+                """,
+                (patient_id, test["id"]),
+            ).fetchone()
+            if latest is None:
+                continue
+            answer = connection.execute(
+                """
+                SELECT ta.value
+                FROM Test_Answers ta
+                JOIN Test_Questions q ON q.id = ta.question_id AND q.is_critical = 1
+                WHERE ta.result_id = ?
+                """,
+                (latest["id"],),
+            ).fetchone()
+            if answer is not None and answer["value"] is not None and answer["value"] > 0:
+                alerts.append(test["critical_message"])
+        return alerts
 
     return app
 

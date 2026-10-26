@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Тесты — Медмонитор{% endblock %}
+{% block body %}
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="title">Тесты</div>
+      <div class="sub">{{ user.name }} {{ user.surname }}</div>
+    </div>
+    <div class="avatar">{{ user.name[:1] }}{{ user.surname[:1] }}</div>
+  </header>
+  <main class="screen">
+    <div class="stack">
+      {% if critical_alerts %}
+        {% for message in critical_alerts %}
+        <section class="card alert-critical" role="alert">
+          <div class="alert-critical-title">Пожалуйста, обратите внимание</div>
+          <p>{{ message }}</p>
+        </section>
+        {% endfor %}
+      {% endif %}
+
+      <a class="text-link" href="{{ url_for('dashboard') }}">← Вернуться в кабинет</a>
+
+      {% if tests %}
+        {% for test in tests %}
+        <a class="card note-link-block" href="{{ url_for('take_test', test_id=test.id) }}">
+          <span>{{ test.title }}</span>
+          <span class="note-link-arrow" aria-hidden="true">→</span>
+        </a>
+        {% endfor %}
+      {% else %}
+        <section class="card">
+          <div class="zone">Сейчас нет тестов для прохождения.</div>
+        </section>
+      {% endif %}
+    </div>
+  </main>
+</div>
+{% endblock %}

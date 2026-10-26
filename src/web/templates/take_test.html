@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ test.title }} — Медмонитор{% endblock %}
+{% block body %}
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="title">{{ test.title }}</div>
+      <div class="sub">{{ user.name }} {{ user.surname }}</div>
+    </div>
+    <div class="avatar">{{ user.name[:1] }}{{ user.surname[:1] }}</div>
+  </header>
+  <main class="screen">
+    <div class="stack">
+      <a class="text-link" href="{{ url_for('tests') }}">← К списку тестов</a>
+
+      <section class="card">
+        <div class="card-title">Описание</div>
+        <p class="test-description">{{ test.description }}</p>
+      </section>
+
+      <form method="post" action="{{ url_for('submit_test', test_id=test.id) }}" class="stack">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        {% for question in questions %}
+        <section class="card question-block">
+          <div class="question-text">{{ question.position }}. {{ question.text }}</div>
+          <div class="answer-strip">
+            {% for value in range(question.min_value, question.max_value + 1) %}
+            <label class="answer-option">
+              <input type="radio" name="q{{ question.id }}" value="{{ value }}" required>
+              <span>
+                {%- if test.answer_kind == 'binary' -%}
+                  {{ 'Да' if value == 1 else 'Нет' }}
+                {%- else -%}
+                  {{ value }}
+                {%- endif -%}
+              </span>
+            </label>
+            {% endfor %}
+          </div>
+        </section>
+        {% endfor %}
+
+        <button class="btn btn-primary btn-block" type="submit">Отправить</button>
+      </form>
+    </div>
+  </main>
+</div>
+{% endblock %}

@@ -279,3 +279,45 @@ a:hover { text-decoration: underline; }
 .note-metrics { display: flex; gap: 6px; flex-wrap: wrap; }
 .note-metrics .metric-badge { font-size: 12px; padding: 5px 10px; }
 .note-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ----- Баннер непройденных тестов (подсвечен жёлтым) ----- */
+.test-banner {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px;
+  background: #fff8e1; border: 1px solid #f3dd94;
+  color: var(--ink); font-weight: 600; text-decoration: none;
+  transition: background .12s ease, transform .12s ease;
+}
+.test-banner:hover { background: #fdf3cf; text-decoration: none; transform: translateY(-1px); }
+.test-banner:active { transform: translateY(0); }
+.test-banner-icon { flex-shrink: 0; display: inline-flex; }
+.test-banner-text { flex: 1; }
+.test-banner-arrow { color: #b7791f; font-size: 22px; line-height: 1; }
+
+/* ----- Критический алерт (красный блок выше всех) ----- */
+.alert-critical {
+  background: #fdecec;
+  border: 1px solid #f3b4b6;
+  border-left: 4px solid var(--danger);
+}
+.alert-critical-title { color: #b4232a; font-weight: 700; margin-bottom: 6px; }
+.alert-critical p { color: #8a2b2e; }
+
+/* ----- Прохождение теста: вопросы и варианты ответа ----- */
+.test-description { white-space: pre-wrap; color: var(--ink-soft); }
+.question-block .question-text { font-weight: 600; margin-bottom: 14px; }
+.answer-strip { display: flex; gap: 8px; flex-wrap: wrap; }
+.answer-option { position: relative; cursor: pointer; }
+.answer-option input {
+  position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer;
+}
+.answer-option span {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 46px; padding: 11px 16px; border-radius: 12px;
+  border: 1.5px solid var(--line); background: #f6f8fb; color: var(--ink-soft);
+  font-weight: 600; transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.answer-option input:checked + span {
+  background: var(--brand); border-color: var(--brand); color: #fff;
+}
+.answer-option input:focus-visible + span { box-shadow: 0 0 0 3px var(--brand-soft); }
