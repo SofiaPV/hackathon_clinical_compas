@@ -4,6 +4,7 @@ src/clinical_compass/__init__.py
 src/clinical_compass.egg-info/PKG-INFO
 src/clinical_compass.egg-info/SOURCES.txt
 src/clinical_compass.egg-info/dependency_links.txt
+src/clinical_compass.egg-info/requires.txt
 src/clinical_compass.egg-info/top_level.txt
 src/clinical_compass/domain/__init__.py
 src/clinical_compass/domain/models.py

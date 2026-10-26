@@ -3,3 +3,6 @@ Name: clinical-compass
 Version: 0.1.0
 Summary: Clinical Compass database access layer
 Requires-Python: >=3.10
+Requires-Dist: Flask<4.0,>=3.1
+Requires-Dist: Flask-WTF<2.0,>=1.2
+Requires-Dist: qrcode[pil]<9.0,>=8.0
