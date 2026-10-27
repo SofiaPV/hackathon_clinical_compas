@@ -1,7 +1,30 @@
+# Python
 .venv/
+venv/
 __pycache__/
 *.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Local databases (do not commit patient data)
 *.sqlite3
 *.db
-.pytest_cache/
+
+# IDE / editors
 .idea/
+.vscode/
+
+# macOS (AppleDouble files and Finder metadata from zipped archives)
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+__MACOSX/
+
+# Windows
+Thumbs.db
+Desktop.ini
